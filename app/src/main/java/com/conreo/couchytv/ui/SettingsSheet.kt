@@ -120,25 +120,66 @@ fun SettingsSheet(
     val photoPicker = rememberLauncherForActivityResult(
         OpenDocumentOrGetContent()
     ) { uri ->
-        if (uri != null) {
-            scope.launch {
-                withContext(Dispatchers.IO) {
-                    context.contentResolver.openInputStream(uri)?.use { input ->
+        // Never fail silently: say whether a URI came back and whether it could be read.
+        android.util.Log.i("CouchyPicker", "photo result uri=$uri")
+        if (uri == null) {
+            Actions.toast(context, "No image selected")
+            return@rememberLauncherForActivityResult
+        }
+        scope.launch {
+            val copied = withContext(Dispatchers.IO) {
+                runCatching {
+                    val input = context.contentResolver.openInputStream(uri)
+                        ?: error("cannot read $uri")
+                    input.use { i ->
                         File(context.filesDir, "wallpaper.jpg").outputStream().use { out ->
-                            input.copyTo(out)
+                            i.copyTo(out)
                         }
                     }
                 }
-                store.update {
-                    it.copy(
-                        useCustomWallpaper = true,
-                        useBingWallpaper = false,
-                        useVideoWallpaper = false,
-                        useBuiltinAerials = false,
-                    )
-                }
-                onWallpaperChanged()
             }
+            android.util.Log.i("CouchyPicker", "copy result=$copied")
+            copied.fold(
+                onSuccess = {
+                    store.update {
+                        it.copy(
+                            useCustomWallpaper = true,
+                            // A picked photo replaces the Bing daily picture.
+                            useBingWallpaper = false,
+                            useVideoWallpaper = false,
+                            useBuiltinAerials = false,
+                        )
+                    }
+                    onWallpaperChanged()
+                    Actions.toast(context, "Wallpaper set")
+                },
+                onFailure = {
+                    Actions.toast(context, "Could not read image: ${it.message}")
+                },
+            )
+        }
+    }
+
+    // The vendor galleries (the only pickers on most TV sets) return a MediaStore URI
+    // such as content://media/external/images/media/519 without granting access to it,
+    // so reading it requires READ_EXTERNAL_STORAGE. Ask for it before opening a picker
+    // and hand the selection back once it is granted.
+    var pendingPick by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val storagePermission = rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        val action = pendingPick
+        pendingPick = null
+        if (granted) action?.invoke()
+        else Actions.toast(context, "Storage permission needed to pick a file")
+    }
+    fun pickWithStorage(action: () -> Unit) {
+        val needed = Build.VERSION.SDK_INT in 23..32 &&
+            context.checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (!needed) action() else {
+            pendingPick = action
+            storagePermission.launch(android.Manifest.permission.READ_EXTERNAL_STORAGE)
         }
     }
 
@@ -271,12 +312,16 @@ fun SettingsSheet(
                             }
                         },
                         onPickPhoto = {
-                            runCatching { photoPicker.launch(arrayOf("image/*")) }
-                                .onFailure { Actions.toast(context, context.getString(R.string.toast_no_picker)) }
+                            pickWithStorage {
+                                runCatching { photoPicker.launch(arrayOf("image/*")) }
+                                    .onFailure { Actions.toast(context, context.getString(R.string.toast_no_picker)) }
+                            }
                         },
                         onPickVideo = {
-                            runCatching { videoPicker.launch(arrayOf("video/*")) }
-                                .onFailure { Actions.toast(context, context.getString(R.string.toast_no_picker)) }
+                            pickWithStorage {
+                                runCatching { videoPicker.launch(arrayOf("video/*")) }
+                                    .onFailure { Actions.toast(context, context.getString(R.string.toast_no_picker)) }
+                            }
                         },
                     )
                     SettingsScreen.Display -> DisplayScreen(

@@ -293,9 +293,17 @@ fun LauncherApp(rescanTick: Int) {
     // sleep — they normally only tick on minute boundaries via produceState.
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     var resumeTick by remember { mutableIntStateOf(0) }
+    // A picker opened from here is another activity. The vendor gallery finishes on a
+    // key-DOWN, so the matching key-UP reaches us on return and activates whatever tile
+    // has focus — picking a wallpaper used to launch the app under the cursor. Swallow
+    // exactly that orphaned release.
+    var orphanKeyUpPending by remember { mutableStateOf(false) }
     DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) resumeTick++
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                resumeTick++
+                orphanKeyUpPending = true
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -680,6 +688,14 @@ fun LauncherApp(rescanTick: Int) {
             Modifier
                 .fillMaxSize()
                 .onPreviewKeyEvent { event ->
+                    if (orphanKeyUpPending) {
+                        // Only a bare release is stale; a real press arrives as key-down first.
+                        if (event.type == KeyEventType.KeyUp) {
+                            orphanKeyUpPending = false
+                            return@onPreviewKeyEvent true
+                        }
+                        orphanKeyUpPending = false
+                    }
                     // MENU always opens launcher settings — the only entry point
                     // when the user hides the status bar.
                     if (event.type == KeyEventType.KeyDown && event.key == Key.Menu) {

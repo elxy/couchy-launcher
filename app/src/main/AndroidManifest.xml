@@ -15,6 +15,12 @@
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Reading an image/video the vendor gallery returns (it hands back a MediaStore URI
+         without granting access). Only requested on API 23..32, and only when the user
+         opens a picker. Without it, choosing a wallpaper fails after selection. -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
     <!-- Only used to stream the built-in aerial videos (Apple/Amazon CDNs).
          The launcher makes no other network requests. -->
     <uses-permission android:name="android.permission.INTERNET" />
