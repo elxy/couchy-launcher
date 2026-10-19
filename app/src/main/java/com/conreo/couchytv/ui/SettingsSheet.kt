@@ -83,6 +83,11 @@ import com.conreo.couchytv.util.OpenDocumentOrGetContent
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import android.content.ContentValues
+import android.content.Context
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import kotlinx.serialization.json.Json
 
 private val format = Json { ignoreUnknownKeys = true; prettyPrint = true; encodeDefaults = true }
@@ -761,11 +766,14 @@ private fun SectionAppsDialog(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
+                    // The All-apps section is filled automatically and cannot hold
+                    // memberships, so its tiles are shown as included and are not toggles.
+                    val autoFilled = cat.id == AppRepository.ALL_APPS_ID
                     items(apps.size, key = { apps[it].pkg }) { i ->
                         val app = apps[i]
-                        val inSection = cat.id in AppRepository.sectionsOf(app, config)
+                        val inSection = autoFilled || cat.id in AppRepository.sectionsOf(app, config)
                         Surface(
-                            onClick = { onToggle(app) },
+                            onClick = { if (!autoFilled) onToggle(app) },
                             modifier = if (i == 0) Modifier.focusRequester(f) else Modifier,
                             shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
                             colors = ClickableSurfaceDefaults.colors(
@@ -843,14 +851,24 @@ private fun LauncherSettingsSubscreen(
 
     fun saveConfig() {
         scope.launch {
-            withContext(Dispatchers.IO) {
+            val result = withContext(Dispatchers.IO) {
                 runCatching {
-                    val dir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-                    dir.mkdirs()
-                    File(dir, "CouchyBackup.json").writeText(format.encodeToString(LauncherConfig.serializer(), config))
+                    writeBackupToDownloads(
+                        context,
+                        format.encodeToString(LauncherConfig.serializer(), config),
+                    )
                 }
             }
-            Actions.toast(context, "Saved to Downloads/CouchyBackup.json")
+            // Report what actually happened. The old code wrapped the write in runCatching
+            // and then always said "Saved", so a failure (scoped storage on Android 10+)
+            // looked like success and the file was never there.
+            Actions.toast(
+                context,
+                result.fold(
+                    onSuccess = { "Saved to Downloads/CouchyBackup.json" },
+                    onFailure = { "Could not save: ${it.message ?: it.javaClass.simpleName}" },
+                ),
+            )
         }
     }
 
@@ -1575,5 +1593,50 @@ private fun SmallIconButton(
             // label is the accessibility name announced by TalkBack.
             Icon(icon, contentDescription = label, modifier = Modifier.size(18.dp))
         }
+    }
+}
+
+/**
+ * Writes CouchyBackup.json into the public Downloads folder.
+ *
+ * On API 29+ scoped storage forbids the plain File API there, so the file is written through
+ * MediaStore instead (no runtime permission needed). Older platforms keep the direct write.
+ */
+private fun writeBackupToDownloads(context: Context, json: String) {
+    val name = "CouchyBackup.json"
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        val resolver = context.contentResolver
+        // Replace an earlier backup rather than accumulate "CouchyBackup (1).json" copies.
+        // Deleting something we do not own can be refused, which must not block the save.
+        runCatching {
+            resolver.delete(
+                MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                "${MediaStore.Downloads.DISPLAY_NAME}=?",
+                arrayOf(name),
+            )
+        }
+        val values = ContentValues().apply {
+            put(MediaStore.Downloads.DISPLAY_NAME, name)
+            put(MediaStore.Downloads.MIME_TYPE, "application/json")
+            put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+            put(MediaStore.Downloads.IS_PENDING, 1)
+        }
+        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+            ?: error("MediaStore refused the insert")
+        try {
+            resolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
+                ?: error("no output stream for $uri")
+            values.clear()
+            values.put(MediaStore.Downloads.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+        } catch (t: Throwable) {
+            runCatching { resolver.delete(uri, null, null) }
+            throw t
+        }
+    } else {
+        @Suppress("DEPRECATION")
+        val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        if (!dir.exists()) dir.mkdirs()
+        File(dir, name).writeText(json)
     }
 }

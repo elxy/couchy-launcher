@@ -244,7 +244,11 @@ object AppRepository {
         // The auto-filled All-apps section is never a manual/fallback target.
         val validIds = config.categories.map { it.id }.filter { it != ALL_APPS_ID }.toSet()
         val fallback = config.categories.lastOrNull { it.id != ALL_APPS_ID }?.id ?: "apps"
-        val user = config.sections[app.pkg]
+        // A stored ALL_APPS_ID is not a section membership: that section shows every app
+        // regardless. The section editor used to write it when a tile was tapped inside
+        // "All apps", which left the app in no section at all ("selected but never appears").
+        // Ignoring it here also repairs configs that were already saved that way.
+        val user = config.sections[app.pkg]?.takeIf { ALL_APPS_ID !in it }
         if (user != null) return user.filter { it in validIds }.toSet()
         return setOf(if (app.autoCategory in validIds) app.autoCategory else fallback)
     }
