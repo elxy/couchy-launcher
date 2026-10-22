@@ -65,6 +65,13 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // Pure-logic unit tests run on the JVM: no device, no emulator. The Android
+    // stubs (android.graphics, android.util) return their defaults instead of
+    // throwing "not mocked", which is enough for code that only *holds* them.
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -91,4 +98,6 @@ dependencies {
     // OkHttp data source: lets us stream aerials through a trust-all TLS client
     // so Apple's sylvan.apple.com (cert chain many TV trust stores reject) works.
     implementation("androidx.media3:media3-datasource-okhttp:1.4.1")
+
+    testImplementation("junit:junit:4.13.2")
 }
