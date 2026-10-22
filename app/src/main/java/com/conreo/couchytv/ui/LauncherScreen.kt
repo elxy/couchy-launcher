@@ -89,6 +89,7 @@ import com.conreo.couchytv.data.LAYOUT_GRID
 import com.conreo.couchytv.data.LauncherConfig
 import com.conreo.couchytv.data.NetStatus
 import com.conreo.couchytv.data.Shelf
+import com.conreo.couchytv.util.WallpaperFile
 import com.conreo.couchytv.data.networkStatusFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -586,7 +587,7 @@ fun LauncherApp(rescanTick: Int) {
     ) {
         val source = when {
             config.useBingWallpaper -> bingPhoto?.file
-            config.useCustomWallpaper -> File(context.filesDir, "wallpaper.jpg")
+            config.useCustomWallpaper -> WallpaperFile.of(context)
             else -> null
         }
         value = if (source == null || !source.exists()) null to null

@@ -80,6 +80,7 @@ import com.conreo.couchytv.data.LauncherConfig
 import kotlinx.coroutines.Dispatchers
 import androidx.compose.runtime.withFrameNanos
 import com.conreo.couchytv.util.OpenDocumentOrGetContent
+import com.conreo.couchytv.util.WallpaperFile
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -131,10 +132,9 @@ fun SettingsSheet(
                 runCatching {
                     val input = context.contentResolver.openInputStream(uri)
                         ?: error("cannot read $uri")
-                    input.use { i ->
-                        File(context.filesDir, "wallpaper.jpg").outputStream().use { out ->
-                            i.copyTo(out)
-                        }
+                    // Atomic: the launcher must never decode a half-written JPEG.
+                    check(WallpaperFile.write(context.filesDir, input)) {
+                        "could not write the wallpaper"
                     }
                 }
             }
