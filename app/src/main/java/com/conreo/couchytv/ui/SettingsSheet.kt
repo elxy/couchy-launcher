@@ -755,17 +755,19 @@ private fun AppsScreen(
 /** Small leading artwork for list rows: banner if the app ships one, else icon. */
 @Composable
 private fun AppThumb(app: AppEntry) {
+    val banner = appBanner(app)
+    val icon = appIcon(app)
     when {
-        app.banner != null -> Image(
-            bitmap = app.banner,
+        banner != null -> Image(
+            bitmap = banner,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(width = 52.dp, height = 30.dp)
                 .clip(RoundedCornerShape(5.dp)),
         )
-        app.icon != null -> Image(
-            bitmap = app.icon,
+        icon != null -> Image(
+            bitmap = icon,
             contentDescription = null,
             modifier = Modifier.size(30.dp),
         )
@@ -829,9 +831,11 @@ private fun SectionAppsDialog(
                         ) {
                             Box(Modifier.fillMaxWidth().padding(8.dp)) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    if (app.banner != null) {
+                                    val banner = appBanner(app)
+                                    val icon = appIcon(app)
+                                    if (banner != null) {
                                         Image(
-                                            bitmap = app.banner,
+                                            bitmap = banner,
                                             contentDescription = null,
                                             contentScale = ContentScale.Crop,
                                             modifier = Modifier
@@ -847,8 +851,8 @@ private fun SectionAppsDialog(
                                                 .background(Color.White.copy(alpha = 0.08f), RoundedCornerShape(6.dp)),
                                             contentAlignment = Alignment.Center,
                                         ) {
-                                            if (app.icon != null) {
-                                                Image(bitmap = app.icon, contentDescription = null, modifier = Modifier.size(40.dp))
+                                            if (icon != null) {
+                                                Image(bitmap = icon, contentDescription = null, modifier = Modifier.size(40.dp))
                                             }
                                         }
                                     }
@@ -906,15 +910,30 @@ private fun LauncherSettingsSubscreen(
             }
             // Report what actually happened. The old code wrapped the write in runCatching
             // and then always said "Saved", so a failure (scoped storage on Android 10+)
-            // looked like success and the file was never there.
+            // looked like success and the file was never there. The success line goes
+            // through R.string so it is translated like every other toast; the failure
+            // line stays literal on purpose — it carries the platform's own message
+            // ("...No such file or directory") and is only shown when something is
+            // actually broken.
             Actions.toast(
                 context,
                 result.fold(
-                    onSuccess = { "Saved to Downloads/CouchyBackup.json" },
+                    onSuccess = { context.getString(R.string.toast_config_saved) },
                     onFailure = { "Could not save: ${it.message ?: it.javaClass.simpleName}" },
                 ),
             )
         }
+    }
+
+    // Below Android 10 the backup is written through the plain File API into the
+    // public Downloads folder, which needs WRITE_EXTERNAL_STORAGE. Ask when the
+    // user actually saves, not at launch: a TV that never exports a backup is
+    // never asked. From API 29 up MediaStore handles it and no permission is due.
+    val savePermission = rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) saveConfig()
+        else Actions.toast(context, context.getString(R.string.toast_need_storage_save))
     }
 
     val loadPicker = rememberLauncherForActivityResult(
@@ -957,7 +976,16 @@ private fun LauncherSettingsSubscreen(
         )
         SettingsItem(
             selected = false,
-            onClick = { saveConfig() },
+            onClick = {
+                // WRITE_EXTERNAL_STORAGE exists as a runtime permission only on
+                // API 23..28; above that the write goes through MediaStore.
+                val needsWrite = Build.VERSION.SDK_INT in 23..28 &&
+                    context.checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                    android.content.pm.PackageManager.PERMISSION_GRANTED
+                if (needsWrite) {
+                    savePermission.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                } else saveConfig()
+            },
             headlineContent = { Text(stringResource(R.string.item_save_config)) },
             supportingContent = { Text(stringResource(R.string.item_save_config_sub)) },
             leadingContent = { Icon(AppIcons.Save, contentDescription = null) },
@@ -968,6 +996,15 @@ private fun LauncherSettingsSubscreen(
             headlineContent = { Text(stringResource(R.string.item_load_config)) },
             supportingContent = { Text(stringResource(R.string.item_load_config_sub)) },
             leadingContent = { Icon(AppIcons.Folder, contentDescription = null) },
+        )
+        SettingsItem(
+            selected = false,
+            onClick = {
+                scope.launch { store.update { it.copy(keepResident = !it.keepResident) } }
+            },
+            headlineContent = { Text(stringResource(R.string.keep_resident)) },
+            supportingContent = { Text(stringResource(R.string.keep_resident_sub)) },
+            trailingContent = { CheckMark(checked = config.keepResident) },
         )
         SettingsItem(
             selected = false,
@@ -1681,7 +1718,16 @@ private fun writeBackupToDownloads(context: Context, json: String) {
     } else {
         @Suppress("DEPRECATION")
         val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        if (!dir.exists()) dir.mkdirs()
+        // mkdirs() returns false both when a parent is missing and when the
+        // permission is not held, and File.writeText then fails with a bare
+        // "No such file or directory" — which reads as a path bug rather than
+        // the permission problem it is. Say which one it was.
+        if (!dir.isDirectory && !dir.mkdirs()) {
+            error(
+                "cannot create ${dir.absolutePath}" +
+                    " (storage permission not granted on this device)"
+            )
+        }
         File(dir, name).writeText(json)
     }
 }
