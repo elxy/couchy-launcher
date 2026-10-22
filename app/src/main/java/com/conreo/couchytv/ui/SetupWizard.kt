@@ -66,6 +66,14 @@ fun SetupWizard(onDone: () -> Unit, onVpnChosen: (String?) -> Unit) {
         // "Amati" feature = certified Google TV experience (home app locked by Google)
         context.packageManager.hasSystemFeature("com.google.android.feature.AMATI_EXPERIENCE")
     }
+    // Vendor/operator TVs (e.g. ColorOS TV on OPPO sets) ship no activity for
+    // ACTION_HOME_SETTINGS and have no RoleManager before Android 10, so the
+    // button below can do nothing at all there. Detect it and offer ADB instead
+    // of a dead end.
+    val hasHomeSettings = remember {
+        context.packageManager
+            .resolveActivity(Intent(Settings.ACTION_HOME_SETTINGS), PackageManager.MATCH_DEFAULT_ONLY) != null
+    }
     val ip = remember { deviceIp() }
 
     val roleLauncher = rememberLauncherForActivityResult(
@@ -172,16 +180,25 @@ fun SetupWizard(onDone: () -> Unit, onVpnChosen: (String?) -> Unit) {
                             onNext = { if (gtvPage < 2) gtvPage++ else step = 2 },
                         )
                     } else {
-                        Body(stringResource(R.string.wizard_aosp_body))
-                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Button(onClick = { requestDefault() }) {
-                                Text(stringResource(R.string.wizard_set_default))
+                        if (hasHomeSettings) {
+                            Body(stringResource(R.string.wizard_aosp_body))
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Button(onClick = { requestDefault() }) {
+                                    Text(stringResource(R.string.wizard_set_default))
+                                }
+                                Button(onClick = { defaultHome = defaultHomePackage(context) }) {
+                                    Text(stringResource(R.string.wizard_check_again))
+                                }
                             }
+                            Body(stringResource(R.string.wizard_no_dialog_hint))
+                        } else {
+                            Body(stringResource(R.string.wizard_no_home_settings_body))
+                            CodeLine("adb connect ${ip ?: "<TV-IP>"}:5555")
+                            CodeLine("adb shell cmd package set-home-activity com.conreo.couchytv/.MainActivity")
                             Button(onClick = { defaultHome = defaultHomePackage(context) }) {
                                 Text(stringResource(R.string.wizard_check_again))
                             }
                         }
-                        Body(stringResource(R.string.wizard_no_dialog_hint))
                         NavRow(
                             backAction = { step = 0 },
                             nextLabel = stringResource(R.string.wizard_skip),

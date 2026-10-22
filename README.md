@@ -132,6 +132,21 @@ Re-check; if another launcher takes over, disable that one too, until **Home** l
 
 The built-in setup wizard walks through this with your TV's IP pre-filled. No computer? It also offers a button-remap method (map **Home** to Couchy with an app like Button Mapper).
 
+### Vendor TVs (OPPO / OnePlus ColorOS TV)
+
+These sets need two extra things, both already handled by this build:
+
+- **`MODERN_HOME` category** — ColorOS TV waits at boot only for a home activity that declares the private category `com.heytap.tv.launcher.category.MODERN_HOME`. Without it the TV can hang on the boot animation. It is in the manifest and ignored by AOSP/Google TV.
+- **No on-screen home picker** — these firmwares have no `HOME_SETTINGS` activity and no `RoleManager` (pre-Android 10), so the wizard prints the ADB command instead of offering a button that cannot work.
+
+One firmware quirk is outside the app: ColorOS TV blocks installing any APK whose manifest declares `HOME` + `DEFAULT` unless the package name is on its launcher whitelist, and the block is gated on the non-persistent property `service.tvapi.enable_launcher_install=1`. If `adb install` fails with `INSTALL_FAILED_DUPLICATE_PERMISSION: ... banned, because of launcher categories`, see the device notes for the setter tool; then:
+
+```sh
+adb shell cmd package set-home-activity com.conreo.couchytv/.MainActivity
+```
+
+Installing or updating the APK always clears the default-home choice on these sets — re-run that command after every install.
+
 ---
 
 ## Privacy
@@ -312,6 +327,21 @@ adb shell pm disable-user --user 0 com.google.android.tungsten.setupwraith   # �
 </details>
 
 内置设置向导会带你完成整个过程，并预填电视 IP。没有电脑？它还提供按键重映射方案（用 Button Mapper 之类的应用把 **Home** 映射到 Couchy）。
+
+### 厂商定制电视（OPPO / 一加 ColorOS TV）
+
+这类电视还需要两件事，本构建已处理：
+
+- **`MODERN_HOME` 类别** —— ColorOS TV 开机只等同时声明私有类别 `com.heytap.tv.launcher.category.MODERN_HOME` 的桌面；缺了可能卡在开机画面。已在 manifest 声明，AOSP / Google TV 会忽略它。
+- **没有屏幕内的主页选择入口** —— 这类固件既没有 `HOME_SETTINGS` Activity，Android 10 之前也没有 `RoleManager`，所以向导直接给出 ADB 命令，而不是提供一个点不动的按钮。
+
+还有一条固件限制不在应用内：ColorOS TV 会拒绝安装 manifest 中同时声明 `HOME` + `DEFAULT` 的 APK（除非包名在其桌面白名单里），且该拦截由非持久属性 `service.tvapi.enable_launcher_install=1` 控制。若 `adb install` 报 `INSTALL_FAILED_DUPLICATE_PERMISSION: ... banned, because of launcher categories`，见机型记录里的属性设置工具；之后执行：
+
+```sh
+adb shell cmd package set-home-activity com.conreo.couchytv/.MainActivity
+```
+
+在这类电视上，安装或升级 APK 都会清掉默认桌面选择——每次安装后都要重新执行该命令。
 
 ---
 
