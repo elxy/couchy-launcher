@@ -119,6 +119,8 @@
     <string name="pick_video_sub">アイコンの背後でミュートループ再生。AerialViewsコレクションのApple空撮ファイル（USBまたはダウンロード）と相性抜群。</string>
     <string name="pick_photo">写真を選択…</string>
     <string name="pick_photo_sub">USBドライブまたはダウンロードから</string>
+    <string name="bing_wallpaper">Bing の今日の画像</string>
+    <string name="bing_wallpaper_sub">毎日新しい画像 — 直近 15 枚がアイコンの後ろで切り替わります</string>
     <string name="screensaver_section">スクリーンセーバー</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">未インストール — Playストアから入手</string>

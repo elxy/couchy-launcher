@@ -119,6 +119,8 @@
     <string name="pick_video_sub">เล่นวนแบบไม่มีเสียงอยู่หลังไอคอน ทำงานได้ดีกับไฟล์ Apple aerial จากคอลเล็กชัน AerialViews (USB หรือดาวน์โหลด)</string>
     <string name="pick_photo">เลือกรูปภาพ…</string>
     <string name="pick_photo_sub">จากไดรฟ์ USB หรือดาวน์โหลด</string>
+    <string name="bing_wallpaper">ภาพประจำวันของ Bing</string>
+    <string name="bing_wallpaper_sub">ภาพใหม่ทุกวัน — 15 ภาพล่าสุดสลับกันด้านหลังไอคอน</string>
     <string name="screensaver_section">โปรแกรมรักษาหน้าจอ</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">ไม่ได้ติดตั้ง — ดาวน์โหลดจาก Play Store</string>

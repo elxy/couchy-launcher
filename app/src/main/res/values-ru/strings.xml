@@ -119,6 +119,8 @@
     <string name="pick_video_sub">Беззвучный цикл за значками. Отлично работает с файлами Apple Aerial из коллекции AerialViews (USB или загрузки).</string>
     <string name="pick_photo">Выбрать фото…</string>
     <string name="pick_photo_sub">С USB-накопителя или загрузок</string>
+    <string name="bing_wallpaper">Фото дня Bing</string>
+    <string name="bing_wallpaper_sub">Новая картинка каждый день — последние 15 сменяются за значками</string>
     <string name="screensaver_section">Заставка</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">Не установлено — скачайте из Play Store</string>

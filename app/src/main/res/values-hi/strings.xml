@@ -119,6 +119,8 @@
     <string name="pick_video_sub">आइकन के पीछे मौन लूप में चलता है। AerialViews संग्रह (USB या डाउनलोड) की Apple हवाई फ़ाइलों के साथ बहुत अच्छा काम करता है।</string>
     <string name="pick_photo">फ़ोटो चुनें…</string>
     <string name="pick_photo_sub">USB ड्राइव या डाउनलोड से</string>
+    <string name="bing_wallpaper">Bing का दैनिक फ़ोटो</string>
+    <string name="bing_wallpaper_sub">हर दिन नई तस्वीर — पिछली 15 आइकनों के पीछे बदलती रहती हैं</string>
     <string name="screensaver_section">स्क्रीनसेवर</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">इंस्टॉल नहीं — Play Store से प्राप्त करें</string>

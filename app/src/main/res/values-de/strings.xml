@@ -119,6 +119,8 @@
     <string name="pick_video_sub">Läuft stumm in Schleife hinter den Symbolen. Ideal mit Apple-Luftdateien aus der AerialViews-Sammlung (USB oder Downloads).</string>
     <string name="pick_photo">Foto auswählen…</string>
     <string name="pick_photo_sub">Von USB-Laufwerk oder Downloads</string>
+    <string name="bing_wallpaper">Bing-Bild des Tages</string>
+    <string name="bing_wallpaper_sub">Jeden Tag ein neues Bild — die letzten 15 wechseln hinter den Symbolen</string>
     <string name="screensaver_section">Bildschirmschoner</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">Nicht installiert — im Play Store erhältlich</string>

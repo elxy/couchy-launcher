@@ -119,6 +119,8 @@
     <string name="pick_video_sub">Odtwarza w pętli bez dźwięku za ikonami. Świetnie działa z plikami Apple Aerial z kolekcji AerialViews (USB lub pobrane).</string>
     <string name="pick_photo">Wybierz zdjęcie…</string>
     <string name="pick_photo_sub">Z USB lub pobranych</string>
+    <string name="bing_wallpaper">Zdjęcie dnia Bing</string>
+    <string name="bing_wallpaper_sub">Nowy obraz każdego dnia — ostatnie 15 zmienia się za ikonami</string>
     <string name="screensaver_section">Wygaszacz</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">Nie zainstalowano — pobierz ze Sklepu Play</string>

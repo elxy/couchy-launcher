@@ -38,9 +38,10 @@ One screen, remote-driven, for 1080p and 4K TVs. Nothing leaves the TV unless yo
 
 - **Three layouts** — Carousel, Grid, or a floating glass Dock (press **Down** to expand to the full grid).
 - **Sections** you rename, reorder and fill; an app can appear in several. New installs go to the first section.
-- **Wallpapers** — gradients, your own photo, a looping video, or optional built-in aerial videos (Apple / Amazon / community, streamed only when enabled), with speed control and cross-fades.
+- **Wallpapers** — gradients, your own photo, Bing's daily photo (the last 15 days rotate behind the icons), a looping video, or optional built-in aerial videos (Apple / Amazon / community, streamed only when enabled), with speed control and cross-fades.
 - **Top Shelf** — while a streaming app is focused in the dock, its hot titles fill the screen above the icons: **Bilibili** (popular videos), **Douyu** (live rooms), **iQIYI**, **Tencent Video** and **Youku**. Each service is asked for its largest published still — up to 2560×1440 for iQIYI, 1920×1080 for Bilibili/Youku — so it still looks sharp on a 4K panel. Press **Up** to browse them: **Left/Right** switch the still, **OK opens the title in its own app** through the deep link that app publishes for launchers, **Down** returns to the dock. From their public web APIs; switch it off in Settings › Display › Top Shelf.
 - **Save & load** your full configuration — categories, layout, wallpaper, and all settings — as a JSON file.
+- **Wallpaper captions** — when no Top Shelf is on screen (an app without a source, e.g. CCTV, or the shelf turned off), that band above the dock describes the wallpaper instead: Bing's photo credit in its own localized wording (中文 when the UI is Chinese), the aerial clips' **timed place labels** — the same Chinese/English captions Apple's films carry on tvOS, changing as the camera flies on — or your video's file name.
 - **18 languages** with a dedicated language picker in Launcher settings.
 - **Adjustable** icon size, spacing, corner roundness, interface scale, dimming, and an optional glass status-bar panel.
 - **Status row** — clock, network state, optional VPN button.
@@ -53,6 +54,12 @@ One screen, remote-driven, for 1080p and 4K TVs. Nothing leaves the TV unless yo
 ## ⚠️ Aerial wallpaper notice
 
 The built-in aerial video wallpapers are **opt-in and off by default**. When enabled, they stream public video files from **Apple** and **Amazon** CDNs — these are non-free, third-party services. No credentials or private data are sent, but the network traffic goes to proprietary infrastructure. If you want a fully libre setup, use the gradient, photo, or local video wallpaper options instead.
+
+---
+
+## ⚠️ Bing daily photo notice
+
+The Bing daily photo wallpaper is **opt-in and off by default**. When enabled, the TV asks `bing.com` for the day's picture and downloads one JPEG per day, keeping the newest 15 on the device (~8 MB on a 1080p set, ~55 MB on a 4K one); those days rotate behind the icons and keep the launcher working offline. The images are Microsoft's, photographed by third parties and not freely licensed; nothing besides the image request leaves the TV. For a fully libre setup, use the gradient, photo, or local video wallpaper options instead.
 
 ---
 
@@ -129,7 +136,7 @@ The built-in setup wizard walks through this with your TV's IP pre-filled. No co
 
 ## Privacy
 
-No ads, analytics, accounts or background services. Network use is limited to what you switch on: aerial video streaming (off by default) and the Top Shelf's video-service listings (on by default). Sections, ordering, hidden apps and wallpaper stay in one local file.
+No ads, analytics, accounts or background services. Network use is limited to what you switch on: aerial video streaming and the Bing daily photo (both off by default) and the Top Shelf's video-service listings (on by default). Sections, ordering, hidden apps and wallpaper stay in one local file.
 
 ## Changelog
 
@@ -137,6 +144,7 @@ No ads, analytics, accounts or background services. Network use is limited to wh
 <summary>Click to expand</summary>
 
 **v1.0.6**
+- Bing daily photo wallpaper (UHD frame on 4K TVs, server-scaled on 1080p)
 - Smoother cold start (limitedParallelism scan, 2-frame boot fade)
 - Settings: white highlight, instant transitions, couch icon
 - Save/load config to Downloads

@@ -119,6 +119,8 @@
     <string name="pick_video_sub">Reproduz em loop silencioso atrás dos ícones. Funciona muito bem com arquivos aéreos da Apple da coleção AerialViews (USB ou downloads).</string>
     <string name="pick_photo">Escolher uma foto…</string>
     <string name="pick_photo_sub">Do USB ou downloads</string>
+    <string name="bing_wallpaper">Foto diária do Bing</string>
+    <string name="bing_wallpaper_sub">Uma imagem nova por dia — as últimas 15 alternam-se atrás dos ícones</string>
     <string name="screensaver_section">Protetor de tela</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">Não instalado — obtenha na Play Store</string>

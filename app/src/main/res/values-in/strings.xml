@@ -119,6 +119,8 @@
     <string name="pick_video_sub">Diputar senyap di belakang ikon. Sangat cocok dengan file aerial Apple dari koleksi AerialViews (USB atau unduhan).</string>
     <string name="pick_photo">Pilih foto…</string>
     <string name="pick_photo_sub">Dari drive USB atau unduhan</string>
+    <string name="bing_wallpaper">Foto harian Bing</string>
+    <string name="bing_wallpaper_sub">Gambar baru setiap hari — 15 terakhir bergantian di belakang ikon</string>
     <string name="screensaver_section">Screensaver</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">Belum terinstal — dapatkan dari Play Store</string>

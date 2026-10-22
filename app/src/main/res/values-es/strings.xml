@@ -130,6 +130,8 @@
     <string name="pick_video_sub">Se reproduce en bucle silencioso detrás de los iconos. Ideal con archivos aéreos de Apple de la colección AerialViews (USB o descargas).</string>
     <string name="pick_photo">Elegir una foto…</string>
     <string name="pick_photo_sub">Desde USB o descargas</string>
+    <string name="bing_wallpaper">Foto diario de Bing</string>
+    <string name="bing_wallpaper_sub">Una imagen nueva cada día: las últimas 15 rotan tras los iconos</string>
     <string name="screensaver_section">Salvapantallas</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">No instalado — obténgalo en Play Store</string>

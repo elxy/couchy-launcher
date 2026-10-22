@@ -121,6 +121,17 @@ class ShelfUi {
 
 val LocalShelfFocus = staticCompositionLocalOf<ShelfFocus?> { null }
 
+/**
+ * Playback position of the wallpaper clip, in whole seconds. Written by the
+ * player, read ONLY by the caption text when it is on screen — a stable holder,
+ * so a per-second tick never recomposes the launcher itself (same trick as
+ * [ShelfFocus]).
+ */
+@Stable
+class CaptionClock {
+    var seconds by mutableIntStateOf(0)
+}
+
 /** Seconds each picture stays before the shelf moves on. */
 private const val SHELF_SECONDS = 8
 
@@ -137,6 +148,13 @@ private const val FOCUS_SETTLE_MS = 350L
  * browsable (Left/Right, wrapping), OK launches the title through the app's own
  * schema URI, Down goes back to the dock and Up moves on to the status-bar
  * buttons.
+ *
+ * When there is no shelf content to show — the focused app has no source at all
+ * (e.g. 央视频) or its listing came back empty — the band above the dock is used
+ * for the wallpaper's caption, instead of any empty shelf chrome: no dots, no
+ * placeholder. [caption] is a fixed line (Bing's credit, the local video's
+ * name); [timedCaption] is the Apple aerials' place label, which follows
+ * playback through [captionClock].
  */
 @Composable
 fun ShelfLayer(
@@ -146,6 +164,9 @@ fun ShelfLayer(
     suppressed: Boolean,
     scrim: Brush?,
     mode: ShelfUi,
+    caption: String?,
+    timedCaption: List<Pair<Int, String>>?,
+    captionClock: CaptionClock?,
     browseFocus: FocusRequester,
     onPlay: (Shelf.Item) -> Unit,
     onUp: () -> Unit,
@@ -224,6 +245,40 @@ fun ShelfLayer(
                 onPlay = onPlay,
                 onUp = onUp,
                 onExitToDock = onExitToDock,
+            )
+        }
+    }
+
+    // No shelf content (no source for this app, or its listing failed) → the
+    // band above the dock carries the wallpaper's caption instead. The shelf
+    // text replaces it the moment there are stills to describe.
+    val noShelf = shownPkg == null || (mode.itemsPkg == shownPkg && mode.items.isEmpty())
+    val captionText = if (!noShelf || suppressed) null else {
+        val timeline = timedCaption
+        val clock = captionClock
+        if (timeline.isNullOrEmpty() || clock == null) caption
+        // The clip's place label changes as the camera moves on (tvOS does the
+        // same); before the first entry, show the first one.
+        else timeline.lastOrNull { it.first <= clock.seconds }?.second
+            ?: timeline.first().second
+    }
+    AnimatedVisibility(
+        visible = !captionText.isNullOrEmpty(),
+        enter = fadeIn(tween(450)),
+        exit = fadeOut(tween(320)),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            Text(
+                text = captionText.orEmpty(),
+                style = MaterialTheme.typography.bodyMedium.copy(shadow = ShelfShadow),
+                color = Color.White.copy(alpha = 0.78f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = anchor.start, end = 24.dp, bottom = anchor.bottom)
+                    .fillMaxWidth(0.62f),
             )
         }
     }

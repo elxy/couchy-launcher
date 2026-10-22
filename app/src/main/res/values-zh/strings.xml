@@ -130,6 +130,8 @@
     <string name="pick_video_sub">在图标后静音循环播放。与 AerialViews 合集中的 Apple 航拍文件（USB 或下载）配合效果最佳。</string>
     <string name="pick_photo">选择照片…</string>
     <string name="pick_photo_sub">从 USB 驱动器或下载中选择</string>
+    <string name="bing_wallpaper">必应每日图片</string>
+    <string name="bing_wallpaper_sub">每天一张新图片 — 最近 15 张在图标后轮换</string>
     <string name="screensaver_section">屏保</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">未安装 — 从 Play Store 获取</string>

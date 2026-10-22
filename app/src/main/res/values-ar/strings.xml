@@ -119,6 +119,8 @@
     <string name="pick_video_sub">يعيد التشغيل بصمت خلف الأيقونات. يعمل بشكل رائع مع ملفات Apple الجوية من مجموعة AerialViews (USB أو التنزيلات).</string>
     <string name="pick_photo">اختيار صورة…</string>
     <string name="pick_photo_sub">من USB أو التنزيلات</string>
+    <string name="bing_wallpaper">صورة Bing اليومية</string>
+    <string name="bing_wallpaper_sub">صورة جديدة كل يوم — آخر 15 صورة تتبدّل خلف الأيقونات</string>
     <string name="screensaver_section">شاشة التوقف</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">غير مثبت — احصل عليه من متجر Play</string>

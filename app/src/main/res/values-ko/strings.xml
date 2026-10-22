@@ -119,6 +119,8 @@
     <string name="pick_video_sub">아이콘 뒤에서 무음 반복 재생됩니다. AerialViews 컬렉션의 Apple 항공 파일(USB 또는 다운로드)과 잘 어울립니다.</string>
     <string name="pick_photo">사진 선택…</string>
     <string name="pick_photo_sub">USB 드라이브 또는 다운로드에서</string>
+    <string name="bing_wallpaper">Bing 오늘의 사진</string>
+    <string name="bing_wallpaper_sub">매일 새 사진 — 최근 15장이 아이콘 뒤에서 순환합니다</string>
     <string name="screensaver_section">화면 보호기</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">설치되지 않음 — Play 스토어에서 받으세요</string>

@@ -127,6 +127,7 @@ fun SettingsSheet(
                 store.update {
                     it.copy(
                         useCustomWallpaper = true,
+                        useBingWallpaper = false,
                         useVideoWallpaper = false,
                         useBuiltinAerials = false,
                     )
@@ -153,6 +154,7 @@ fun SettingsSheet(
                         videoUri = uri.toString(),
                         useVideoWallpaper = true,
                         useCustomWallpaper = false,
+                        useBingWallpaper = false,
                         useBuiltinAerials = false,
                     )
                 }
@@ -224,6 +226,19 @@ fun SettingsSheet(
                                         useBuiltinAerials = true,
                                         useVideoWallpaper = false,
                                         useCustomWallpaper = false,
+                                        useBingWallpaper = false,
+                                    )
+                                }
+                            }
+                        },
+                        onSelectBing = {
+                            scope.launch {
+                                store.update {
+                                    it.copy(
+                                        useBingWallpaper = true,
+                                        useCustomWallpaper = false,
+                                        useVideoWallpaper = false,
+                                        useBuiltinAerials = false,
                                     )
                                 }
                             }
@@ -243,6 +258,7 @@ fun SettingsSheet(
                                     it.copy(
                                         wallpaper = i,
                                         useCustomWallpaper = false,
+                                        useBingWallpaper = false,
                                         useVideoWallpaper = false,
                                         useBuiltinAerials = false,
                                     )
@@ -1267,6 +1283,7 @@ private fun WallpaperScreen(
     config: LauncherConfig,
     onSelectBuiltinAerials: () -> Unit,
     onSelectBuiltinSource: (Int) -> Unit,
+    onSelectBing: () -> Unit,
     onSetScrim: (Int) -> Unit,
     onSetSpeed: (Int) -> Unit,
     onPreset: (Int) -> Unit,
@@ -1284,7 +1301,7 @@ private fun WallpaperScreen(
         )
         val f = initialFocus()
         val staticActive = !config.useBuiltinAerials &&
-            !config.useVideoWallpaper && !config.useCustomWallpaper
+            !config.useVideoWallpaper && !config.useCustomWallpaper && !config.useBingWallpaper
 
         // Dimming — how much the wallpaper is darkened for icon readability.
         // Applies to any background; "Top & bottom" keeps the centre clear.
@@ -1343,6 +1360,16 @@ private fun WallpaperScreen(
             supportingContent = { Text(stringResource(R.string.pick_photo_sub)) },
             leadingContent = { Icon(AppIcons.Image, contentDescription = null) },
             trailingContent = { CheckMark(checked = config.useCustomWallpaper) },
+        )
+
+        // Bing's picture of the day — one download per day, cached on disk so
+        // the next boot (and an offline start) still has a picture.
+        SettingsItem(
+            selected = false, onClick = onSelectBing,
+            headlineContent = { Text(stringResource(R.string.bing_wallpaper)) },
+            supportingContent = { Text(stringResource(R.string.bing_wallpaper_sub)) },
+            leadingContent = { Icon(AppIcons.Globe, contentDescription = null) },
+            trailingContent = { CheckMark(checked = config.useBingWallpaper) },
         )
 
         /* ---------------- VIDEO: built-in aerials + your own video ---------------- */

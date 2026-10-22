@@ -38,14 +38,19 @@ These keep their own licenses, all compatible with GPLv3:
 | AndroidX / Jetpack Compose, `androidx.tv`, DataStore | framework / UI | Apache-2.0 |
 | AndroidX Media3 (ExoPlayer) + OkHttp data source | video wallpaper | Apache-2.0 |
 | kotlinx.serialization | config persistence | Apache-2.0 |
+| Aerial film catalogue — timed place captions, from [Aerial (aerial-tv)](https://github.com/pengchujin/aerial-tv) (addresses and place names extracted from Apple's public tvOS aerial resources) | `assets/aerials.json` (location labels only, no footage) | **MIT**, © 2026 pengchujin |
 
 ## Content that is *not* distributed
 
 The built-in **aerial wallpapers** stream video owned by **Apple, Amazon** and
-community creators. Couchy ships only a manifest of public URLs, never the
-footage itself, and streams it only when you enable that wallpaper. The
-decorative video is fetched over a TLS client scoped to that purpose; no
-credentials or personal data are ever sent.
+community creators. Couchy ships only a manifest of public URLs plus the films'
+short place captions, never the footage itself, and streams it only when you
+enable that wallpaper. The decorative video is fetched over a TLS client scoped
+to that purpose; no credentials or personal data are ever sent.
+
+The **Bing daily photo** is downloaded on request from `bing.com`, credited
+on screen with Bing's own copyright line; the pictures are Microsoft's and the
+photographers'. Nothing about you is sent — only the image request.
 
 ## Contributions
 

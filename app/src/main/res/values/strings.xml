@@ -137,6 +137,8 @@
     <string name="pick_video_sub">Loops muted behind the icons. Works great with the Apple aerial files from the AerialViews collection (USB or downloads).</string>
     <string name="pick_photo">Pick a photo…</string>
     <string name="pick_photo_sub">From USB drive or downloads</string>
+    <string name="bing_wallpaper">Bing daily photo</string>
+    <string name="bing_wallpaper_sub">A new picture every day — the last 15 rotate behind the icons</string>
     <string name="screensaver_section">Screensaver</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">Not installed — get it from the Play Store</string>

@@ -119,6 +119,8 @@
     <string name="pick_video_sub">Simgelerin arkasında sessiz döngüde oynar. AerialViews koleksiyonundaki Apple hava dosyalarıyla (USB veya indirmeler) harika çalışır.</string>
     <string name="pick_photo">Fotoğraf seç…</string>
     <string name="pick_photo_sub">USB sürücüden veya indirmelerden</string>
+    <string name="bing_wallpaper">Bing günün fotoğrafı</string>
+    <string name="bing_wallpaper_sub">Her gün yeni bir görsel — son 15 görsel simgelerin arkasında döner</string>
     <string name="screensaver_section">Ekran koruyucu</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">Yüklü değil — Play Store\'dan edinin</string>

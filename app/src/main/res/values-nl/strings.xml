@@ -119,6 +119,8 @@
     <string name="pick_video_sub">Speelt gedempt af in een lus achter de pictogrammen. Werkt geweldig met Apple-luchtbestanden uit de AerialViews-collectie (USB of downloads).</string>
     <string name="pick_photo">Kies een foto…</string>
     <string name="pick_photo_sub">Van USB-station of downloads</string>
+    <string name="bing_wallpaper">Bing-foto van de dag</string>
+    <string name="bing_wallpaper_sub">Elke dag een nieuwe afbeelding — de laatste 15 wisselen achter de pictogrammen</string>
     <string name="screensaver_section">Schermbeveiliging</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">Niet geïnstalleerd — download uit de Play Store</string>

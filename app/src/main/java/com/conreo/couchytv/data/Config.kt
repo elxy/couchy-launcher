@@ -36,6 +36,8 @@ data class LauncherConfig(
     val knownApps: Set<String> = emptySet(),
     val wallpaper: Int = 1, // Aurora
     val useCustomWallpaper: Boolean = false,
+    /** Bing's picture of the day, downloaded once a day and cached on disk */
+    val useBingWallpaper: Boolean = false,
     /** video wallpaper: persisted content-URI of a local video, looped muted */
     val videoUri: String = "",
     val useVideoWallpaper: Boolean = false,

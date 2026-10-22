@@ -119,6 +119,8 @@
     <string name="pick_video_sub">Phát lặp im lặng phía sau biểu tượng. Hoạt động tốt với tệp Apple trên không từ bộ sưu tập AerialViews (USB hoặc tải xuống).</string>
     <string name="pick_photo">Chọn ảnh…</string>
     <string name="pick_photo_sub">Từ USB hoặc tải xuống</string>
+    <string name="bing_wallpaper">Ảnh hằng ngày của Bing</string>
+    <string name="bing_wallpaper_sub">Ảnh mới mỗi ngày — 15 ảnh gần nhất luân phiên sau các biểu tượng</string>
     <string name="screensaver_section">Trình bảo vệ màn hình</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">Chưa cài đặt — tải từ Play Store</string>

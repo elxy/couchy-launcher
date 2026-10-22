@@ -136,6 +136,8 @@
     <string name="pick_video_sub">Boucle en silencieux derrière les icônes. Idéal avec les fichiers aériens Apple de la collection AerialViews (USB ou téléchargements).</string>
     <string name="pick_photo">Choisir une photo…</string>
     <string name="pick_photo_sub">Depuis une clé USB ou les téléchargements</string>
+    <string name="bing_wallpaper">Photo du jour Bing</string>
+    <string name="bing_wallpaper_sub">Une nouvelle image chaque jour — les 15 dernières tournent derrière les icônes</string>
     <string name="screensaver_section">Écran de veille</string>
     <string name="aerial_title">AerialViews</string>
     <string name="aerial_install_sub">Non installé — obtenez-le sur le Play Store</string>

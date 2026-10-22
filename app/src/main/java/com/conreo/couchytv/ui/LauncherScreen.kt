@@ -2,6 +2,7 @@ package com.conreo.couchytv.ui
 
 import android.graphics.BitmapFactory
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
@@ -44,6 +45,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,6 +82,7 @@ import androidx.tv.material3.Text
 import com.conreo.couchytv.Actions
 import com.conreo.couchytv.data.AppEntry
 import com.conreo.couchytv.data.AppRepository
+import com.conreo.couchytv.data.Bing
 import com.conreo.couchytv.data.ConfigStore
 import com.conreo.couchytv.data.LAYOUT_DOCK
 import com.conreo.couchytv.data.LAYOUT_GRID
@@ -509,29 +512,77 @@ fun LauncherApp(rescanTick: Int) {
         if (movePkg != null) runCatching { moveFocus.requestFocus() }
     }
 
+    // ----- Bing's picture of the day: one download a day, cached on disk so a
+    // power-on (network not up yet) still shows a picture. The panel picks the
+    // rendition — 4K TVs get the raw UHD frame, smaller ones ask Bing to
+    // downscale the same frame server-side (see data/Bing.kt). Like the
+    // aerials, the cached days ROTATE: a random one every 10 minutes, never the
+    // same twice in a row — so the wallpaper isn't frozen on today's frame,
+    // and an offline TV still gets a different picture for days. -----
+    // The caption's clock (aerial place labels follow playback) and the two
+    // language decisions: Bing's localized edition and Chinese captions.
+    val captionClock = remember { CaptionClock() }
+    val uiLanguage = remember(config.language) {
+        config.language.ifEmpty { Locale.getDefault().language }
+    }
+    val chineseUi = remember(uiLanguage) { uiLanguage.startsWith("zh") }
+    val bingMarket = remember(uiLanguage) { Bing.marketFor(uiLanguage) }
+
+    val bingPhoto by produceState<Bing.Photo?>(
+        initialValue = null, config.useBingWallpaper, bingMarket,
+    ) {
+        if (!config.useBingWallpaper) {
+            value = null
+            return@produceState
+        }
+        var nextCheck = 0L
+        while (true) {
+            // Paint from disk first: the network check below can take seconds
+            // on a TV whose network is still coming up after power-on.
+            val days = withContext(Dispatchers.IO) { Bing.cachedDays(context) }
+            if (days.isNotEmpty()) {
+                val shown = value?.file
+                var next = days.random()
+                if (days.size > 1) while (next.file == shown) next = days.random()
+                value = next
+            } else {
+                value = null
+            }
+            // Hourly: Bing publishes at local midnight. Until the first picture
+            // has ever been downloaded, retry faster (the TV may have booted
+            // before its network came up).
+            if (System.currentTimeMillis() >= nextCheck) {
+                val fresh = withContext(Dispatchers.IO) { Bing.daily(context, bingMarket) }
+                nextCheck = System.currentTimeMillis() +
+                    if (fresh == null) 5 * 60_000L else 60 * 60_000L
+                if (fresh != null) {
+                    // A day that wasn't on disk when this tick started was just
+                    // downloaded — show it now instead of waiting for its turn.
+                    // A caption that changed under the picture already on
+                    // screen (UI language switch) is applied in place.
+                    if (days.none { it.date == fresh.date }) value = fresh
+                    else if (value?.date == fresh.date && value?.caption != fresh.caption) value = fresh
+                }
+            }
+            delay(10 * 60_000L)
+        }
+    }
+
     // ----- wallpaper: decoded off the main thread, downsampled, cached.
     // A ~100px copy is decoded alongside: upscaled by the GPU it looks
     // blurred, and crossfading it in costs one texture blend per frame
     // instead of a full-screen RenderEffect blur (heavy on TV GPUs). -----
     val wallpaperPair by produceState<Pair<ImageBitmap?, ImageBitmap?>>(
-        initialValue = null to null, config.useCustomWallpaper, wallpaperVersion
+        initialValue = null to null,
+        config.useCustomWallpaper, config.useBingWallpaper, bingPhoto?.date, wallpaperVersion,
     ) {
-        value = if (!config.useCustomWallpaper) null to null
-        else withContext(Dispatchers.IO) {
-            val f = File(context.filesDir, "wallpaper.jpg")
-            if (!f.exists()) null to null
-            else runCatching {
-                // 1280px is indistinguishable as a scrimmed background but the
-                // texture is ~2.3× smaller than 1920 — TV GPUs choke on the
-                // first upload of full-res textures. prepareToDraw() moves the
-                // upload off the first visible frame.
-                val sharp = decodeDownsampled(f, maxWidth = 1280)
-                    ?.also { it.prepareToDraw() }?.asImageBitmap()
-                val blurred = decodeDownsampled(f, maxWidth = 96)
-                    ?.also { it.prepareToDraw() }?.asImageBitmap()
-                sharp to blurred
-            }.getOrDefault(null to null)
+        val source = when {
+            config.useBingWallpaper -> bingPhoto?.file
+            config.useCustomWallpaper -> File(context.filesDir, "wallpaper.jpg")
+            else -> null
         }
+        value = if (source == null || !source.exists()) null to null
+        else withContext(Dispatchers.IO) { decodeWallpaperPair(source) }
     }
     val (wallpaperSharp, wallpaperBlurred) = wallpaperPair
     val presetBrush = remember(config.wallpaper) {
@@ -540,7 +591,7 @@ fun LauncherApp(rescanTick: Int) {
 
     // ----- Built-in aerial videos: the manifests ship with the launcher, so
     // there's no external dependency — pick one, rotate every 10 minutes. -----
-    val aerialWallpaper by produceState<String?>(
+    val aerialWallpaper by produceState<com.conreo.couchytv.data.BuiltinAerials.Clip?>(
         initialValue = null,
         config.useBuiltinAerials, config.builtinSource, wallpaperVersion,
     ) {
@@ -552,7 +603,7 @@ fun LauncherApp(rescanTick: Int) {
         // changes, the previous video keeps playing until the new one is
         // picked, instead of flashing back to the preset background.
         val aerials = withContext(Dispatchers.IO) {
-            com.conreo.couchytv.data.BuiltinAerials.load(context, config.builtinSource)
+            com.conreo.couchytv.data.BuiltinAerials.loadClips(context, config.builtinSource)
         }
         if (aerials.isEmpty()) return@produceState
         // Pick one, different from the current so the uri always changes (which
@@ -561,8 +612,9 @@ fun LauncherApp(rescanTick: Int) {
         // shuffle. A 10-min safety timer also advances very long clips.
         val current = value
         var next = aerials.random()
-        if (aerials.size > 1) while (next == current) next = aerials.random()
+        if (aerials.size > 1) while (next.uri == current?.uri) next = aerials.random()
         value = next
+        captionClock.seconds = 0 // the new clip starts at its first caption
         delay(10 * 60_000L)
         wallpaperVersion++
     }
@@ -580,6 +632,32 @@ fun LauncherApp(rescanTick: Int) {
     }
 
     val corner: Dp = CORNER_RADII[config.cornerRadius.coerceIn(0, CORNER_RADII.size - 1)]
+
+    // ----- wallpaper caption: the description of what is on screen right now,
+    // shown in the shelf's text band when there is no shelf to describe it.
+    // Bing's copyright line is localized by its market; the Apple aerials
+    // carry tvOS' timed place labels (Chinese + English) and the local video
+    // its file name. (A photo of your own has no description to invent.) -----
+    val videoTitle by produceState<String?>(initialValue = null, config.videoUri) {
+        value = withContext(Dispatchers.IO) { contentDisplayName(context, config.videoUri) }
+    }
+    // Wording for the UI language, chosen once per clip; the clock then picks
+    // the entry that matches the playback position (see ShelfLayer).
+    val aerialTimeline: List<Pair<Int, String>>? = remember(aerialWallpaper, chineseUi) {
+        aerialWallpaper?.captions?.takeIf { it.isNotEmpty() }?.map { c ->
+            c.time to if (chineseUi) c.zh.ifEmpty { c.en } else c.en.ifEmpty { c.zh }
+        }
+    }
+    // Only while the clip is really on screen — a failed stream falls back to
+    // the gradient, and then there is nothing to caption.
+    val aerialOnScreen = config.useBuiltinAerials && net.connected && !aerialError
+    val wallpaperCaption = when {
+        config.useBingWallpaper -> bingPhoto?.caption
+        config.useBuiltinAerials -> aerialWallpaper?.title?.takeIf { aerialOnScreen }
+        config.useVideoWallpaper -> videoTitle
+        else -> null
+    }?.takeIf { it.isNotBlank() }
+
     // Top Shelf state: which dock app is focused (written by AppCard) + whether
     // the shelf is enabled at all. Held in a stable holder so focus moves never
     // recompose this whole screen.
@@ -636,7 +714,7 @@ fun LauncherApp(rescanTick: Int) {
             val aerial = aerialWallpaper
             if (aerial != null && net.connected && !aerialError) {
                 VideoWallpaper(
-                    uri = aerial,
+                    uri = aerial.uri,
                     speed = videoSpeed,
                     loop = false, // play once, then shuffle to the next aerial
                     coverBrush = presetBrush,
@@ -645,16 +723,27 @@ fun LauncherApp(rescanTick: Int) {
                     // aerialError, instead of sitting on the gradient cover.
                     onEnded = { wallpaperVersion++ },
                     onError = { aerialError = true },
+                    // Feeds the place label that changes as the camera moves.
+                    onPosition = { captionClock.seconds = it },
                 )
             } else if (config.useVideoWallpaper && config.videoUri.isNotEmpty()) {
                 VideoWallpaper(uri = config.videoUri, speed = videoSpeed, loop = true, coverBrush = presetBrush)
             } else if (wallpaperSharp != null) {
-                Image(
-                    bitmap = wallpaperSharp,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                // Crossfade: the Bing days rotate every 10 minutes, and a snap
+                // between two photos looks like a glitch rather than a change.
+                Crossfade(
+                    targetState = wallpaperSharp,
                     modifier = Modifier.fillMaxSize(),
-                )
+                    animationSpec = tween(900),
+                    label = "wallpaper",
+                ) { bitmap ->
+                    Image(
+                        bitmap = bitmap,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             } else {
                 Box(Modifier.fillMaxSize().background(presetBrush))
             }
@@ -709,6 +798,14 @@ fun LauncherApp(rescanTick: Int) {
                 },
                 mode = shelfUi,
                 browseFocus = shelfBrowseFocus,
+                // Shown only while no shelf stills are on screen (see ShelfLayer).
+                // Dock-only: the text sits in the band above the glass panel,
+                // whose geometry the anchor reports — the grid has no such band.
+                caption = wallpaperCaption.takeIf { config.layout == LAYOUT_DOCK },
+                timedCaption = aerialTimeline.takeIf {
+                    config.layout == LAYOUT_DOCK && aerialOnScreen
+                },
+                captionClock = captionClock,
                 onPlay = { item ->
                     val pkg = shelfUi.pkg
                     val uri = item.play
@@ -1505,6 +1602,8 @@ private fun VideoWallpaper(
     coverBrush: Brush,
     onEnded: () -> Unit = {},
     onError: () -> Unit = {},
+    /** Playback position in whole seconds — drives the aerial captions. */
+    onPosition: ((Int) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -1589,6 +1688,18 @@ private fun VideoWallpaper(
     // the gradient (not a black hole) until the rebuilt player renders its frame.
     LaunchedEffect(player == null) { if (player == null) alpha.snapTo(0f) }
     LaunchedEffect(player, speed) { player?.setPlaybackSpeed(speed) }
+
+    // Caption clock: the clip's position in whole seconds, polled once a second.
+    // A wallpaper never seeks, so a periodic read is all the place labels need —
+    // and it is cheaper than a listener that fires many times per second.
+    val reportPosition by rememberUpdatedState(onPosition)
+    LaunchedEffect(player) {
+        val p = player ?: return@LaunchedEffect
+        while (true) {
+            reportPosition?.invoke((p.currentPosition / 1000L).toInt())
+            delay(1000L)
+        }
+    }
 
     DisposableEffect(player) {
         val p = player ?: return@DisposableEffect onDispose { }
@@ -1688,6 +1799,30 @@ private fun LoadingScreen() {
         )
     }
 }
+
+/** DISPLAY_NAME of a content URI — the local video wallpaper's file name. */
+private fun contentDisplayName(context: android.content.Context, uri: String): String? {
+    if (uri.isEmpty()) return null
+    return runCatching {
+        context.contentResolver.query(
+            android.net.Uri.parse(uri),
+            arrayOf(android.provider.OpenableColumns.DISPLAY_NAME),
+            null, null, null,
+        )?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
+    }.getOrNull()?.takeIf { it.isNotBlank() }
+}
+
+/** Decodes the sharp + pseudo-blur copies of a wallpaper file (see above). */
+private fun decodeWallpaperPair(file: File): Pair<ImageBitmap?, ImageBitmap?> = runCatching {
+    // 1280px is indistinguishable as a scrimmed background but the texture is
+    // ~2.3× smaller than 1920 — TV GPUs choke on the first upload of full-res
+    // textures. prepareToDraw() moves the upload off the first visible frame.
+    val sharp = decodeDownsampled(file, maxWidth = 1280)
+        ?.also { it.prepareToDraw() }?.asImageBitmap()
+    val blurred = decodeDownsampled(file, maxWidth = 96)
+        ?.also { it.prepareToDraw() }?.asImageBitmap()
+    sharp to blurred
+}.getOrDefault(null to null)
 
 /** Decodes a bitmap with an inSampleSize so its width stays near [maxWidth]. */
 private fun decodeDownsampled(file: File, maxWidth: Int): android.graphics.Bitmap? {
