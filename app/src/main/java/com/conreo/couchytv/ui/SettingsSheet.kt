@@ -106,6 +106,9 @@ fun SettingsSheet(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var screen by remember { mutableStateOf(SettingsScreen.Main) }
+    // Per-screen cursor memory. Kept here, not inside the screens: they unmount
+    // on the way in, so they can't remember where they were themselves.
+    val cursors = remember { mutableMapOf<SettingsScreen, RowCursor>() }
 
     // Same document-picker flow as videos: opens the system file manager,
     // works with USB drives and network storage providers.
@@ -202,6 +205,7 @@ fun SettingsSheet(
                 ) { target ->
                 when (target) {
                     SettingsScreen.Main -> MainScreen(
+                        cursor = cursors.getOrPut(SettingsScreen.Main) { RowCursor() },
                         onWallpaper = { screen = SettingsScreen.Wallpaper },
                         onDisplay = { screen = SettingsScreen.Display },
                         onStatusBar = { screen = SettingsScreen.StatusBar },
@@ -307,6 +311,7 @@ fun SettingsSheet(
 
 @Composable
 private fun MainScreen(
+    cursor: RowCursor,
     onWallpaper: () -> Unit,
     onDisplay: () -> Unit,
     onStatusBar: () -> Unit,
@@ -325,7 +330,7 @@ private fun MainScreen(
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = 12.dp, start = 8.dp),
         )
-        val f = initialFocus()
+        RestoreRowFocus(cursor)
 
         // ---- Content: what shows on the home screen ----
         SectionLabel(stringResource(R.string.group_content))
@@ -334,13 +339,14 @@ private fun MainScreen(
             headlineContent = { Text(stringResource(R.string.item_app)) },
             supportingContent = { Text(stringResource(R.string.item_app_sub)) },
             leadingContent = { Icon(AppIcons.Apps, contentDescription = null) },
-            modifier = Modifier.focusRequester(f),
+            modifier = Modifier.rowFocus(cursor, 0),
         )
         SettingsItem(
             selected = false, onClick = onCategories,
             headlineContent = { Text(stringResource(R.string.item_sections)) },
             supportingContent = { Text(stringResource(R.string.item_sections_sub)) },
             leadingContent = { Icon(AppIcons.Folder, contentDescription = null) },
+            modifier = Modifier.rowFocus(cursor, 1),
         )
 
         // ---- Appearance: how it looks ----
@@ -350,18 +356,21 @@ private fun MainScreen(
             headlineContent = { Text(stringResource(R.string.item_display)) },
             supportingContent = { Text(stringResource(R.string.item_display_sub)) },
             leadingContent = { Icon(AppIcons.Display, contentDescription = null) },
+            modifier = Modifier.rowFocus(cursor, 2),
         )
         SettingsItem(
             selected = false, onClick = onWallpaper,
             headlineContent = { Text(stringResource(R.string.item_wallpaper)) },
             supportingContent = { Text(stringResource(R.string.item_wallpaper_sub)) },
             leadingContent = { Icon(AppIcons.Image, contentDescription = null) },
+            modifier = Modifier.rowFocus(cursor, 3),
         )
         SettingsItem(
             selected = false, onClick = onStatusBar,
             headlineContent = { Text(stringResource(R.string.item_statusbar)) },
             supportingContent = { Text(stringResource(R.string.item_statusbar_sub)) },
             leadingContent = { Icon(AppIcons.Wifi, contentDescription = null) },
+            modifier = Modifier.rowFocus(cursor, 4),
         )
 
         // ---- System ----
@@ -371,17 +380,20 @@ private fun MainScreen(
             headlineContent = { Text(stringResource(R.string.item_launcher_settings)) },
             supportingContent = { Text(stringResource(R.string.item_launcher_settings_sub)) },
             leadingContent = { Icon(painter = androidx.compose.ui.res.painterResource(R.drawable.ic_couch), contentDescription = null, modifier = Modifier.size(24.dp)) },
+            modifier = Modifier.rowFocus(cursor, 5),
         )
         SettingsItem(
             selected = false, onClick = onAndroidSettings,
             headlineContent = { Text(stringResource(R.string.item_android_settings)) },
             supportingContent = { Text(stringResource(R.string.item_android_settings_sub)) },
             leadingContent = { Icon(AppIcons.Gear, contentDescription = null) },
+            modifier = Modifier.rowFocus(cursor, 6),
         )
         SettingsItem(
             selected = false, onClick = onAbout,
             headlineContent = { Text(stringResource(R.string.item_about)) },
             leadingContent = { Icon(AppIcons.Info, contentDescription = null) },
+            modifier = Modifier.rowFocus(cursor, 7),
         )
     }
 }
@@ -1406,6 +1418,38 @@ private fun initialFocus(): FocusRequester {
         }
     }
     return fr
+}
+
+/**
+ * Where the cursor was inside one settings screen.
+ *
+ * The screens unmount when you go a level deeper, so the memory lives up in
+ * SettingsPanel and is handed back down — otherwise returning from Display
+ * (or Wallpaper, or Launcher settings) drops you on the first row again.
+ */
+@androidx.compose.runtime.Stable
+private class RowCursor {
+    var index by mutableStateOf(0)
+    private val requesters = mutableMapOf<Int, FocusRequester>()
+    fun requester(i: Int): FocusRequester = requesters.getOrPut(i) { FocusRequester() }
+}
+
+/** Marks a row as "cursor position [index]" and gives it a requester. */
+private fun Modifier.rowFocus(cursor: RowCursor, index: Int): Modifier =
+    focusRequester(cursor.requester(index))
+        .onFocusChanged { if (it.isFocused) cursor.index = index }
+
+/** Puts the cursor back on the remembered row once the rows are attached. */
+@Composable
+private fun RestoreRowFocus(cursor: RowCursor) {
+    LaunchedEffect(Unit) {
+        repeat(30) {
+            if (runCatching { cursor.requester(cursor.index).requestFocus() }.isSuccess) {
+                return@LaunchedEffect
+            }
+            withFrameNanos {}
+        }
+    }
 }
 
 @Composable
