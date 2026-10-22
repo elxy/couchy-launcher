@@ -27,9 +27,15 @@ object Actions {
      * service publishes for launchers). If nothing on the box accepts it — or
      * the launch fails — fall back to opening [fallbackPkg] normally, so a
      * click never does nothing.
+     *
+     * Addressed to [fallbackPkg] explicitly: the URI was built from that app's
+     * ids and, for iQIYI, carries that build's own action name. Two builds of
+     * the same app can be installed side by side (银河奇异果 retail +
+     * com.gitvvideo.oppo), and an unaddressed intent would open a chooser.
      */
     fun playShelf(context: Context, uri: String, fallbackPkg: String) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri)).apply {
+            setPackage(fallbackPkg)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             // The streaming app may be force-stopped/frozen; still wake it.
             addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)

@@ -81,7 +81,11 @@ object Shelf {
         // no verified deep link, so it stays display-only.
         "tv.danmaku.bilibilihd" to Source(R.string.shelf_bilibili, false, ::bilibili),
         "com.douyu.xl.douyutv" to Source(R.string.shelf_douyu, false, ::douyu),
-        "com.gitvdemo.video" to Source(R.string.shelf_iqiyi, fetch = ::iqiyi), // 银河奇异果
+        // 银河奇异果 ships under more than one package (retail build vs. the
+        // OPPO TV preinstall). The listing is the same, but each build only
+        // answers to its OWN action namespace — see [iqiyiPlay].
+        "com.gitvdemo.video" to Source(R.string.shelf_iqiyi, fetch = { iqiyi("com.gitvdemo.video") }),
+        "com.gitvvideo.oppo" to Source(R.string.shelf_iqiyi, fetch = { iqiyi("com.gitvvideo.oppo") }),
         "com.ktcp.video" to Source(R.string.shelf_tencent, fetch = ::tencent), // 云视听极光
         "com.cibn.tv" to Source(R.string.shelf_youku, fetch = ::youku), // CIBN 酷喵
     )
@@ -262,7 +266,7 @@ object Shelf {
      * asked for in `img_size` (2560×1440 here, the largest it serves), as AVIF —
      * Android below 12 can't decode AVIF, so the CDN's JPEG twin is requested.
      */
-    private fun iqiyi(): List<Item> {
+    private fun iqiyi(pkg: String): List<Item> {
         val url = "https://mesh.if.iqiyi.com/portal/lw/v7/channel/card/videoUpdate" +
             "?channelName=recommend&ext_data_count=11&play_record=false" +
             "&data_source=rec_focus_v2_suggest&tempId=62&count=11&block_id=focus" +
@@ -286,7 +290,7 @@ object Shelf {
                         .filter { it.isNotEmpty() }
                         .joinToString(" · "),
                     image = img.replace("http://", "https://"),
-                    play = iqiyiPlay(v),
+                    play = iqiyiPlay(v, pkg),
                 )
             }
             .distinctBy { it.title }
@@ -486,14 +490,20 @@ object Shelf {
      * (`gala://page?...`) is resolved by the app into exactly that intent, so
      * the query keys are the JSON keys. Titles that never had a detail page are
      * sent to the player instead when the vendor has external-play rights.
+     *
+     * The action is namespaced per package: the retail build registers
+     * `com.gitvdemo.video.action.*`, the OPPO preinstall (same version, same
+     * UI) registers `com.gitvvideo.oppo.action.*`. A URI carrying the other
+     * build's action matches nothing, and with both APKs installed a shared
+     * action would leave the launcher to pick between two apps.
      */
-    private fun iqiyiPlay(v: JSONObject): String? {
+    private fun iqiyiPlay(v: JSONObject, pkg: String): String? {
         val album = v.optString("album_id")
         val video = v.optString("tv_id")
         if (album.isEmpty() && video.isEmpty()) return null
         return uri(
             "gala://page",
-            "action" to "com.gitvdemo.video.action.ACTION_DETAIL",
+            "action" to "$pkg.action.ACTION_DETAIL",
             "videoId" to album.ifEmpty { null },
             "episodeId" to video.ifEmpty { null },
             "chnId" to v.optString("channel_id").ifEmpty { null },
@@ -536,8 +546,10 @@ object Shelf {
 
     /**
      * Youku/CIBN's detail-jump URI: `id` is the show, `video_id` the episode.
-     * `isfull`/`fullback` start it full-screen, `isBackYingHome=false` makes Back
-     * return to whoever launched it — i.e. us.
+     * Nothing about full screen or Back: `isfull`/`fullback` jump straight into
+     * the full-screen player, which skips the detail page a viewer expects from
+     * a title card, and `isBackYingHome` belongs to the app's own home flow —
+     * both are left out (their defaults apply).
      */
     private fun youkuPlay(v: JSONObject): String? {
         val action = v.optJSONObject("action")
@@ -554,9 +566,6 @@ object Shelf {
             "id" to id.takeIf { it > 0L }?.toString(),
             "mediaSource" to "9",
             "video_id" to vid,
-            "isBackYingHome" to "false",
-            "isfull" to "true",
-            "fullback" to "true",
         )
     }
 
