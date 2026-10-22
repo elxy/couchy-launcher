@@ -35,6 +35,7 @@
 
     <string name="toast_cannot_open">ไม่สามารถเปิดแอปได้</string>
     <string name="toast_no_launchable">แอปไม่มีหน้าจอที่เปิดได้</string>
+    <string name="toast_cannot_play">เปิดรายการนี้ไม่ได้ — กำลังเปิดแอป</string>
     <string name="toast_no_store">ไม่มีร้านค้าแอป — ติดตั้งแอปด้วยตนเอง</string>
     <string name="toast_no_picker">ไม่มีแอปเลือกไฟล์</string>
 
@@ -188,4 +189,5 @@
     <string name="shelf_iqiyi">iQIYI · ยอดนิยม</string>
     <string name="shelf_tencent">Tencent Video · ยอดนิยม</string>
     <string name="shelf_youku">Youku · ยอดนิยม</string>
+    <string name="shelf_hint">↑ ตัวควบคุม · ↓ กลับไปที่แอป · OK เล่น</string>
 </resources>

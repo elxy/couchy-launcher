@@ -42,6 +42,7 @@
     <!-- Toasts -->
     <string name="toast_cannot_open">Could not open app</string>
     <string name="toast_no_launchable">App has no launchable screen</string>
+    <string name="toast_cannot_play">Can\'t open that title — opening the app instead</string>
     <string name="toast_no_store">App store not available — install the app manually</string>
     <string name="toast_no_picker">No file picker app available</string>
 
@@ -205,4 +206,5 @@
     <string name="shelf_iqiyi">iQIYI · Popular</string>
     <string name="shelf_tencent">Tencent Video · Hot</string>
     <string name="shelf_youku">Youku · Hot</string>
+    <string name="shelf_hint">↑ Controls · ↓ Back to app · OK Play</string>
 </resources>

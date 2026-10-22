@@ -35,6 +35,7 @@
 
     <string name="toast_cannot_open">Uygulama açılamadı</string>
     <string name="toast_no_launchable">Uygulamanın başlatılabilir ekranı yok</string>
+    <string name="toast_cannot_play">Bu başlık açılamıyor — uygulama açılıyor</string>
     <string name="toast_no_store">Uygulama mağazası kullanılamıyor — uygulamayı manuel olarak yükleyin</string>
     <string name="toast_no_picker">Dosya seçici uygulaması yok</string>
 
@@ -188,4 +189,5 @@
     <string name="shelf_iqiyi">iQIYI · Popüler</string>
     <string name="shelf_tencent">Tencent Video · Popüler</string>
     <string name="shelf_youku">Youku · Popüler</string>
+    <string name="shelf_hint">↑ Kontroller · ↓ Uygulamaya dön · OK Oynat</string>
 </resources>

@@ -41,6 +41,7 @@
     <!-- Mensajes -->
     <string name="toast_cannot_open">No se pudo abrir la app</string>
     <string name="toast_no_launchable">La app no tiene pantalla de inicio</string>
+    <string name="toast_cannot_play">No se puede abrir ese título: se abre la app</string>
     <string name="toast_no_store">Tienda no disponible — instale la app manualmente</string>
     <string name="toast_no_picker">No hay selector de archivos disponible</string>
 
@@ -202,4 +203,5 @@
     <string name="shelf_iqiyi">iQIYI · Popular</string>
     <string name="shelf_tencent">Tencent Video · Popular</string>
     <string name="shelf_youku">Youku · Popular</string>
+    <string name="shelf_hint">↑ Controles · ↓ Volver a la app · OK Reproducir</string>
 </resources>

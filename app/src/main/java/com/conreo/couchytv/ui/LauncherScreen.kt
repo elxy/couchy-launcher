@@ -85,6 +85,7 @@ import com.conreo.couchytv.data.LAYOUT_DOCK
 import com.conreo.couchytv.data.LAYOUT_GRID
 import com.conreo.couchytv.data.LauncherConfig
 import com.conreo.couchytv.data.NetStatus
+import com.conreo.couchytv.data.Shelf
 import com.conreo.couchytv.data.networkStatusFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -583,6 +584,12 @@ fun LauncherApp(rescanTick: Int) {
     // the shelf is enabled at all. Held in a stable holder so focus moves never
     // recompose this whole screen.
     val shelfFocus = remember { ShelfFocus() }
+    // Browsing state shared by dock (enters), shelf (renders) and status bar.
+    val shelfUi = remember { ShelfUi() }
+    // Focus targets for the three stops of the shelf's D-pad path.
+    val shelfBrowseFocus = remember { FocusRequester() }
+    val shelfCardFocus = remember { FocusRequester() }
+    val statusFocus = remember { FocusRequester() }
     val shelfEnabled = config.shelfEnabled && config.layout == LAYOUT_DOCK
     Box(Modifier.fillMaxSize()) {
     ScaledUi(uiScale) {
@@ -700,6 +707,33 @@ fun LauncherApp(rescanTick: Int) {
                     1 -> ScrimTop
                     else -> ScrimTopBottom
                 },
+                mode = shelfUi,
+                browseFocus = shelfBrowseFocus,
+                onPlay = { item ->
+                    val pkg = shelfUi.pkg
+                    val uri = item.play
+                    // A card the service gave no usable id for still opens its app,
+                    // so a click never looks broken.
+                    if (pkg != null) {
+                        if (uri != null) Actions.playShelf(context, uri, pkg)
+                        else Actions.launchApp(context, pkg)
+                    }
+                },
+                // Up from the shelf lands on the status-bar buttons (the shelf sits
+                // between the dock and the bar); Down returns to the dock card.
+                onUp = {
+                    scope.launch {
+                        withFrameNanos {}
+                        runCatching { statusFocus.requestFocus() }
+                    }
+                },
+                onExitToDock = {
+                    shelfUi.exit()
+                    scope.launch {
+                        withFrameNanos {}
+                        runCatching { shelfCardFocus.requestFocus() }
+                    }
+                },
             )
 
             // Launch entrance: after the boot logo, wait a beat, then the glass
@@ -731,6 +765,20 @@ fun LauncherApp(rescanTick: Int) {
                         .clipToBounds()
                         .onFocusChanged { statusBarFocused = it.hasFocus }
                         .focusGroup()
+                        // Down from the bar returns to the shelf while it is open,
+                        // so the path dock → shelf → bar is walkable in reverse.
+                        .onPreviewKeyEvent { e ->
+                            if (shelfUi.active &&
+                                e.type == KeyEventType.KeyDown &&
+                                e.key == Key.DirectionDown
+                            ) {
+                                scope.launch {
+                                    withFrameNanos {}
+                                    runCatching { shelfBrowseFocus.requestFocus() }
+                                }
+                                true
+                            } else false
+                        }
                         // Entrance: slide down from the top + fade in.
                         .graphicsLayer {
                             translationY = (introTop - 1f) * size.height
@@ -743,6 +791,7 @@ fun LauncherApp(rescanTick: Int) {
                         date = date,
                         showVpn = config.showVpnButton,
                         glass = config.statusBarGlass,
+                        focusRequester = statusFocus,
                         onVpnClick = {
                             if (config.vpnApp.isNotEmpty()) Actions.launchApp(context, config.vpnApp)
                             else Actions.openVpnSettings(context)
@@ -764,6 +813,18 @@ fun LauncherApp(rescanTick: Int) {
                         shelfAnchor = shelfAnchor,
                         intro = introShown,
                         expanded = dockExpanded,
+                        shelfUi = shelfUi,
+                        shelfCardFocus = shelfCardFocus,
+                        // Up opens the playable shelf when this app has one; when it
+                        // doesn't, the key falls through to the status bar as before.
+                        onShelfUp = { app ->
+                            if (shelfEnabled && Shelf.interactive(app.pkg) &&
+                                shelfUi.itemsPkg == app.pkg && shelfUi.items.any { it.play != null }
+                            ) {
+                                shelfUi.enter(app.pkg)
+                                true
+                            } else false
+                        },
                         onExpandChange = { dockExpanded = it },
                         onLaunch = { app -> if (movePkg == null) Actions.launchApp(context, app.pkg) },
                         onMenu = { app -> if (movePkg == null) menuFor = app },
@@ -1097,6 +1158,9 @@ private fun DockArea(
     shelfAnchor: ShelfAnchor,
     intro: Boolean,
     expanded: Boolean,
+    shelfUi: ShelfUi,
+    shelfCardFocus: FocusRequester,
+    onShelfUp: (AppEntry) -> Boolean,
     onExpandChange: (Boolean) -> Unit,
     onLaunch: (AppEntry) -> Unit,
     onMenu: (AppEntry) -> Unit,
@@ -1128,7 +1192,11 @@ private fun DockArea(
     // becomes the grid's columns when unfolded, and both states are centered
     // with the same column math — so icons never shift horizontally.
     BoxWithConstraints(
-        modifier.onFocusChanged { if (!it.hasFocus) shelfFocus?.pkg = null },
+        modifier.onFocusChanged {
+            // Keep the shelf up while it is being browsed: the dock losing focus
+            // to the shelf is not the user leaving this app.
+            if (!it.hasFocus && !shelfUi.active) shelfFocus?.pkg = null
+        },
     ) {
         val panelInnerPadding = 18.dp
         val available = maxWidth - 80.dp - panelInnerPadding * 2
@@ -1179,6 +1247,9 @@ private fun DockArea(
                     gapUsed = gapUsed,
                     innerPadding = panelInnerPadding,
                     shelfAnchor = shelfAnchor,
+                    shelfUi = shelfUi,
+                    shelfCardFocus = shelfCardFocus,
+                    onShelfUp = onShelfUp,
                     onExpandFrom = { i -> expandFromCol = i; onExpandChange(true) },
                     onLaunch = onLaunch,
                     onMenu = onMenu,
@@ -1276,6 +1347,9 @@ private fun DockGlassPanel(
     gapUsed: Dp,
     innerPadding: Dp,
     shelfAnchor: ShelfAnchor,
+    shelfUi: ShelfUi,
+    shelfCardFocus: FocusRequester,
+    onShelfUp: (AppEntry) -> Boolean,
     onExpandFrom: (Int) -> Unit,
     onLaunch: (AppEntry) -> Unit,
     onMenu: (AppEntry) -> Unit,
@@ -1334,16 +1408,27 @@ private fun DockGlassPanel(
                         accent = accent,
                         cardWidth = cardWidth,
                         showLabel = config.showAppLabels,
-                        modifier = (when {
-                            moving -> Modifier.focusRequester(moveFocus)
-                            i == 0 -> Modifier.focusRequester(dockFocus)
-                            else -> Modifier
-                        }).onPreviewKeyEvent { e ->
-                            if (movePkg == null &&
-                                e.type == KeyEventType.KeyDown &&
-                                e.key == Key.DirectionDown
-                            ) { onExpandFrom(i); true } else false
-                        },
+                        modifier = Modifier
+                            // Two requesters can share a node; the first card keeps
+                            // dockFocus for the launch entrance, and the app whose
+                            // shelf is open also gets shelfCardFocus for Down.
+                            .let { if (i == 0) it.focusRequester(dockFocus) else it }
+                            .let {
+                                if (app.pkg == shelfUi.pkg) it.focusRequester(shelfCardFocus) else it
+                            }
+                            .let { if (moving) it.focusRequester(moveFocus) else it }
+                            .onPreviewKeyEvent { e ->
+                                if (movePkg != null || e.type != KeyEventType.KeyDown) {
+                                    return@onPreviewKeyEvent false
+                                }
+                                when (e.key) {
+                                    Key.DirectionDown -> { onExpandFrom(i); true }
+                                    // Not handled (no playable shelf) → the key falls
+                                    // through to the status bar, exactly as before.
+                                    Key.DirectionUp -> onShelfUp(app)
+                                    else -> false
+                                }
+                            },
                         onLaunch = { onLaunch(app) },
                         onLongPress = { onMenu(app) },
                     )

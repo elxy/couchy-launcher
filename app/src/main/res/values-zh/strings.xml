@@ -41,6 +41,7 @@
     <!-- 提示消息 -->
     <string name="toast_cannot_open">无法打开应用</string>
     <string name="toast_no_launchable">该应用无可启动界面</string>
+    <string name="toast_cannot_play">无法直接打开该内容，已打开应用</string>
     <string name="toast_no_store">应用商店不可用 — 请手动安装应用</string>
     <string name="toast_no_picker">没有可用的文件选择器</string>
 
@@ -202,4 +203,5 @@
     <string name="shelf_iqiyi">爱奇艺 · 热门</string>
     <string name="shelf_tencent">腾讯视频 · 热播</string>
     <string name="shelf_youku">优酷 · 热门</string>
+    <string name="shelf_hint">↑ 控制栏 · ↓ 返回应用 · OK 播放</string>
 </resources>

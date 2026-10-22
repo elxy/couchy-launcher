@@ -35,6 +35,7 @@
 
     <string name="toast_cannot_open">تعذر فتح التطبيق</string>
     <string name="toast_no_launchable">التطبيق لا يحتوي على شاشة قابلة للتشغيل</string>
+    <string name="toast_cannot_play">تعذّر فتح هذا العنوان — سيتم فتح التطبيق</string>
     <string name="toast_no_store">متجر التطبيقات غير متاح — قم بتثبيت التطبيق يدويًا</string>
     <string name="toast_no_picker">لا يتوفر تطبيق لاختيار الملفات</string>
 
@@ -188,4 +189,5 @@
     <string name="shelf_iqiyi">iQIYI · الشائع</string>
     <string name="shelf_tencent">Tencent Video · الشائع</string>
     <string name="shelf_youku">Youku · الشائع</string>
+    <string name="shelf_hint">↑ التحكم · ↓ العودة إلى التطبيق · OK تشغيل</string>
 </resources>

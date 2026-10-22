@@ -35,6 +35,7 @@
 
     <string name="toast_cannot_open">Не удалось открыть приложение</string>
     <string name="toast_no_launchable">У приложения нет запускаемого экрана</string>
+    <string name="toast_cannot_play">Не удалось открыть этот фильм — открывается приложение</string>
     <string name="toast_no_store">Магазин приложений недоступен — установите приложение вручную</string>
     <string name="toast_no_picker">Нет доступного выбора файлов</string>
 
@@ -188,4 +189,5 @@
     <string name="shelf_iqiyi">iQIYI · Популярное</string>
     <string name="shelf_tencent">Tencent Video · Популярное</string>
     <string name="shelf_youku">Youku · Популярное</string>
+    <string name="shelf_hint">↑ Управление · ↓ Назад в приложение · OK Воспроизвести</string>
 </resources>

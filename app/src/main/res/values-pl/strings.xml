@@ -35,6 +35,7 @@
 
     <string name="toast_cannot_open">Nie można otworzyć aplikacji</string>
     <string name="toast_no_launchable">Aplikacja nie ma ekranu startowego</string>
+    <string name="toast_cannot_play">Nie można otworzyć tego tytułu — otwieram aplikację</string>
     <string name="toast_no_store">Sklep z aplikacjami niedostępny — zainstaluj ręcznie</string>
     <string name="toast_no_picker">Brak dostępnego selektora plików</string>
 
@@ -188,4 +189,5 @@
     <string name="shelf_iqiyi">iQIYI · Popularne</string>
     <string name="shelf_tencent">Tencent Video · Popularne</string>
     <string name="shelf_youku">Youku · Popularne</string>
+    <string name="shelf_hint">↑ Sterowanie · ↓ Powrót do aplikacji · OK Odtwórz</string>
 </resources>

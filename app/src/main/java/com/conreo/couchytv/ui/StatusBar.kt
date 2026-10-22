@@ -13,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -34,6 +36,9 @@ fun StatusBar(
     onVpnClick: () -> Unit,
     onNetworkClick: () -> Unit,
     onSettingsClick: () -> Unit,
+    /** Where Up-from-the-shelf lands: the network icon, i.e. the left end of the
+     *  button cluster. Null in contexts that never focus the bar. */
+    focusRequester: FocusRequester? = null,
 ) {
     // Optional glass panel behind the icon cluster — same look as the dock
     // panel, corners follow the roundness setting.
@@ -74,6 +79,7 @@ fun StatusBar(
             active = net.connected,
             contentDescription = stringResource(R.string.cd_network),
             onClick = onNetworkClick,
+            modifier = if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier,
         )
         StatusIcon(
             icon = AppIcons.Gear,
@@ -106,9 +112,11 @@ private fun StatusIcon(
     active: Boolean,
     contentDescription: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Surface(
         onClick = onClick,
+        modifier = modifier,
         shape = ClickableSurfaceDefaults.shape(CircleShape),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.Transparent,

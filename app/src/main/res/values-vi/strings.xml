@@ -35,6 +35,7 @@
 
     <string name="toast_cannot_open">Không thể mở ứng dụng</string>
     <string name="toast_no_launchable">Ứng dụng không có màn hình khởi chạy</string>
+    <string name="toast_cannot_play">Không mở được mục này — đang mở ứng dụng</string>
     <string name="toast_no_store">Cửa hàng ứng dụng không khả dụng — cài đặt ứng dụng thủ công</string>
     <string name="toast_no_picker">Không có ứng dụng chọn tệp</string>
 
@@ -188,4 +189,5 @@
     <string name="shelf_iqiyi">iQIYI · Nổi bật</string>
     <string name="shelf_tencent">Tencent Video · Nổi bật</string>
     <string name="shelf_youku">Youku · Nổi bật</string>
+    <string name="shelf_hint">↑ Điều khiển · ↓ Quay lại ứng dụng · OK Phát</string>
 </resources>

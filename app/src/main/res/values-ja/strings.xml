@@ -35,6 +35,7 @@
 
     <string name="toast_cannot_open">アプリを開けませんでした</string>
     <string name="toast_no_launchable">このアプリには起動画面がありません</string>
+    <string name="toast_cannot_play">このタイトルを開けません — アプリを開きます</string>
     <string name="toast_no_store">アプリストアが利用できません — 手動でインストールしてください</string>
     <string name="toast_no_picker">ファイル選択アプリがありません</string>
 
@@ -188,4 +189,5 @@
     <string name="shelf_iqiyi">iQIYI · 人気</string>
     <string name="shelf_tencent">テンセントビデオ · 人気</string>
     <string name="shelf_youku">優酷 · 人気</string>
+    <string name="shelf_hint">↑ コントロール · ↓ アプリに戻る · OK 再生</string>
 </resources>

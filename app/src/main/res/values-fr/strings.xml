@@ -41,6 +41,7 @@
     <!-- Messages -->
     <string name="toast_cannot_open">Impossible d\'ouvrir l\'appli</string>
     <string name="toast_no_launchable">Cette appli n\'a pas d\'écran de démarrage</string>
+    <string name="toast_cannot_play">Impossible d\'ouvrir ce titre — ouverture de l\'appli</string>
     <string name="toast_no_store">Boutique indisponible — installez l\'appli manuellement</string>
     <string name="toast_no_picker">Aucun sélecteur de fichiers disponible</string>
 
@@ -202,4 +203,5 @@
     <string name="shelf_iqiyi">iQIYI · Populaire</string>
     <string name="shelf_tencent">Tencent Video · Populaire</string>
     <string name="shelf_youku">Youku · Populaire</string>
+    <string name="shelf_hint">↑ Commandes · ↓ Retour à l\'appli · OK Lecture</string>
 </resources>

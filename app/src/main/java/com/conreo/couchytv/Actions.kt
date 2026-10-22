@@ -22,6 +22,33 @@ object Actions {
         } else toast(context, context.getString(R.string.toast_no_launchable))
     }
 
+    /**
+     * Opens a Top Shelf title through its app's own deep link (a schema URI the
+     * service publishes for launchers). If nothing on the box accepts it — or
+     * the launch fails — fall back to opening [fallbackPkg] normally, so a
+     * click never does nothing.
+     */
+    fun playShelf(context: Context, uri: String, fallbackPkg: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uri)).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            // The streaming app may be force-stopped/frozen; still wake it.
+            addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
+        }
+        val resolves = runCatching {
+            intent.resolveActivity(context.packageManager) != null
+        }.getOrDefault(false)
+        if (resolves) {
+            runCatching { context.startActivity(intent) }
+                .onFailure {
+                    toast(context, context.getString(R.string.toast_cannot_play))
+                    launchApp(context, fallbackPkg)
+                }
+        } else {
+            toast(context, context.getString(R.string.toast_cannot_play))
+            launchApp(context, fallbackPkg)
+        }
+    }
+
     fun openAppInfo(context: Context, pkg: String) {
         runCatching {
             context.startActivity(

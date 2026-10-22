@@ -35,6 +35,7 @@
 
     <string name="toast_cannot_open">ऐप नहीं खुल सका</string>
     <string name="toast_no_launchable">ऐप में कोई लॉन्च स्क्रीन नहीं है</string>
+    <string name="toast_cannot_play">यह शीर्षक नहीं खुल सका — ऐप खोला जा रहा है</string>
     <string name="toast_no_store">ऐप स्टोर उपलब्ध नहीं — मैन्युअल रूप से इंस्टॉल करें</string>
     <string name="toast_no_picker">कोई फ़ाइल चयनकर्ता उपलब्ध नहीं</string>
 
@@ -188,4 +189,5 @@
     <string name="shelf_iqiyi">iQIYI · लोकप्रिय</string>
     <string name="shelf_tencent">Tencent Video · लोकप्रिय</string>
     <string name="shelf_youku">Youku · लोकप्रिय</string>
+    <string name="shelf_hint">↑ नियंत्रण · ↓ ऐप पर वापस · OK चलाएँ</string>
 </resources>

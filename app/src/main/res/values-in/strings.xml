@@ -35,6 +35,7 @@
 
     <string name="toast_cannot_open">Tidak dapat membuka aplikasi</string>
     <string name="toast_no_launchable">Aplikasi tidak memiliki layar yang dapat diluncurkan</string>
+    <string name="toast_cannot_play">Tidak bisa membuka judul ini — membuka aplikasi</string>
     <string name="toast_no_store">Toko aplikasi tidak tersedia — instal aplikasi secara manual</string>
     <string name="toast_no_picker">Tidak ada aplikasi pemilih file</string>
 
@@ -188,4 +189,5 @@
     <string name="shelf_iqiyi">iQIYI · Populer</string>
     <string name="shelf_tencent">Tencent Video · Populer</string>
     <string name="shelf_youku">Youku · Populer</string>
+    <string name="shelf_hint">↑ Kontrol · ↓ Kembali ke aplikasi · OK Putar</string>
 </resources>
