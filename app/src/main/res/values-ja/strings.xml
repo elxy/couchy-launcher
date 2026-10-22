@@ -52,6 +52,7 @@
     <string name="item_load_config">設定を読み込む</string>
     <string name="item_load_config_sub">保存ファイルから設定を復元</string>
     <string name="toast_config_saved">設定を保存しました</string>
+    <string name="toast_need_storage_save">設定を保存するにはストレージの許可が必要です</string>
     <string name="toast_config_loaded">設定を読み込みました — 再起動推奨</string>
     <string name="toast_config_bad">無効または破損したバックアップファイル</string>
     <string name="item_android_settings">Android設定</string>
@@ -142,6 +143,11 @@
     <string name="about_foss">フリー＆オープンソース</string>
     <string name="about_license">GNU General Public License v3.0（GPLv3）の下でライセンスされています。Couchy Launcherを自由に使用、研究、共有、改変できます。</string>
     <string name="about_thirdparty">ソファのアートワーク：Twemoji（MIT）。空撮動画：Apple、Amazon、コミュニティコレクション、所有者からストリーミング。</string>
+    <string name="keep_resident">ランチャーをメモリに常駐</string>
+    <string name="keep_resident_sub">メモリに残り、アプリから戻ったとき再読み込みせず即座に再開します。通知が表示されます。</string>
+    <string name="keep_alive_title">ランチャー常駐</string>
+    <string name="keep_alive_channel">ランチャー常駐</string>
+    <string name="keep_alive_text">ホーム画面をすぐに開けるようにします。ランチャー設定でオフにできます。</string>
     <string name="rerun_wizard">セットアップウィザードを再実行</string>
     <string name="rerun_wizard_sub">デフォルトランチャーの設定と初回ヒント</string>
 
@@ -161,6 +167,7 @@
     <string name="wizard_aosp_body">このデバイスはホームアプリの選択を許可しています。下のボタンを押し、システムダイアログでCouchy Launcherを選択して確認してください（「常時」を選択してください）。</string>
     <string name="wizard_set_default">デフォルトランチャーに設定</string>
     <string name="wizard_no_dialog_hint">ダイアログが表示されない場合：Android設定 &gt; アプリ &gt; デフォルトアプリ &gt; ホームアプリ &gt; Couchy Launcher。またはホームボタンを押すだけ — Androidがどのランチャーを使うか尋ねます。</string>
+    <string name="wizard_no_home_settings_body">"このテレビのファームウェアには「ホームアプリ」の設定がありません（メーカー製ファームウェア、例: OPPO/ColorOS TV）。同じネットワーク上のパソコンから一度だけ Couchy をホーム画面に設定してください:"</string>
     <string name="wizard_vpn_title">VPNボタン</string>
     <string name="wizard_vpn_body">VPNアプリを使用している場合は選択してください — ステータスバーのVPNボタンがそれを開きます。スキップするとVPNボタンは非表示のままです（後で設定 › ステータスバーで有効化できます）。</string>
     <string name="wizard_vpn_none">このデバイスにVPNアプリは検出されませんでした。</string>

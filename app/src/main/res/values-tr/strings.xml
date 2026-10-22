@@ -52,6 +52,7 @@
     <string name="item_load_config">Yapılandırmayı yükle</string>
     <string name="item_load_config_sub">Kaydedilmiş ayarları geri yükle</string>
     <string name="toast_config_saved">Yapılandırma kaydedildi</string>
+    <string name="toast_need_storage_save">Yapılandırmayı kaydetmek için depolama izni gerekli</string>
     <string name="toast_config_loaded">Yapılandırma yüklendi — yeniden başlatma önerilir</string>
     <string name="toast_config_bad">Geçersiz yedek dosyası</string>
     <string name="item_android_settings">Android ayarları</string>
@@ -142,6 +143,11 @@
     <string name="about_foss">Özgür &amp; açık kaynak</string>
     <string name="about_license">GNU General Public License v3.0 (GPLv3) altında lisanslanmıştır. Couchy Launcher\'ı kullanmakta, incelemekte, paylaşmakta ve değiştirmekte özgürsünüz.</string>
     <string name="about_thirdparty">Kanepe çizimi: Twemoji (MIT). Hava videoları: Apple, Amazon ve topluluk koleksiyonları, sahiplerinden yayınlanır.</string>
+    <string name="keep_resident">Başlatıcıyı bellekte tut</string>
+    <string name="keep_resident_sub">Uygulamadan dönüş anında olsun diye bellekte kalır. Bir bildirim gösterir.</string>
+    <string name="keep_alive_title">Başlatıcı açık</string>
+    <string name="keep_alive_channel">Başlatıcı açık</string>
+    <string name="keep_alive_text">Ana ekranı anında yeniden açılabilir tutar. Başlatıcı ayarlarından kapatın.</string>
     <string name="rerun_wizard">Kurulum sihirbazını tekrar çalıştır</string>
     <string name="rerun_wizard_sub">Varsayılan başlatıcı kurulumu ve ilk çalıştırma ipuçları</string>
 
@@ -161,6 +167,7 @@
     <string name="wizard_aosp_body">Bu cihaz bir ana uygulama seçmeye izin veriyor. Aşağıdaki düğmeye basın, sistem iletişim kutusunda Couchy Launcher\'ı seçin ve onaylayın (sorulursa \"Her zaman\"ı seçin).</string>
     <string name="wizard_set_default">Varsayılan başlatıcı olarak ayarla</string>
     <string name="wizard_no_dialog_hint">İletişim kutusu görünmezse: Android ayarları &gt; Uygulamalar &gt; Varsayılan uygulamalar &gt; Ana uygulama &gt; Couchy Launcher. Veya sadece Ana Sayfa düğmesine basın — Android hangi başlatıcıyı kullanacağınızı soracaktır.</string>
+    <string name="wizard_no_home_settings_body">"Bu televizyonun yazılımında „ana ekran uygulaması” ayarı yok (üretici yazılımı, ör. OPPO/ColorOS TV). Couchy'yi aynı ağdaki bir bilgisayardan bir kez ana ekran olarak ayarlayın:"</string>
     <string name="wizard_vpn_title">VPN düğmesi</string>
     <string name="wizard_vpn_body">Bir VPN uygulaması kullanıyorsanız onu seçin — durum çubuğundaki VPN düğmesi onu açacaktır. Atla ve VPN düğmesi gizli kalır (daha sonra Ayarlar › Durum çubuğu\'ndan etkinleştirebilirsiniz).</string>
     <string name="wizard_vpn_none">Bu cihazda VPN uygulaması algılanmadı.</string>

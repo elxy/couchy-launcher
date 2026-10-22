@@ -52,6 +52,7 @@
     <string name="item_load_config">تحميل الإعدادات</string>
     <string name="item_load_config_sub">استعادة الإعدادات من ملف محفوظ مسبقًا</string>
     <string name="toast_config_saved">تم حفظ الإعدادات</string>
+    <string name="toast_need_storage_save">يلزم إذن التخزين لحفظ الإعدادات</string>
     <string name="toast_config_loaded">تم تحميل الإعدادات — قد تحتاج إعادة التشغيل</string>
     <string name="toast_config_bad">ملف النسخ الاحتياطي غير صالح أو تالف</string>
     <string name="item_android_settings">إعدادات Android</string>
@@ -142,6 +143,11 @@
     <string name="about_foss">حر &amp; مفتوح المصدر</string>
     <string name="about_license">مرخص بموجب رخصة GNU General Public License v3.0 (GPLv3). أنت حر في استخدام ودراسة ومشاركة وتعديل Couchy Launcher.</string>
     <string name="about_thirdparty">رسم الأريكة: Twemoji (MIT). الفيديوهات الجوية: مجموعات Apple و Amazon والمجتمع، يتم بثها من مالكيها.</string>
+    <string name="keep_resident">الإبقاء على المشغّل في الذاكرة</string>
+    <string name="keep_resident_sub">يبقى مقيماً حتى تعود من تطبيق فوراً بدلاً من إعادة التحميل. تظهر إشعار.</string>
+    <string name="keep_alive_title">المشغّل مقيم</string>
+    <string name="keep_alive_channel">المشغّل مقيم</string>
+    <string name="keep_alive_text">يجعل الشاشة الرئيسية تُفتح فوراً. أوقف هذا في إعدادات المشغّل.</string>
     <string name="rerun_wizard">إعادة تشغيل معالج الإعداد</string>
     <string name="rerun_wizard_sub">إعداد المشغّل الافتراضي ونصائح البداية</string>
 
@@ -161,6 +167,7 @@
     <string name="wizard_aosp_body">يسمح هذا الجهاز باختيار تطبيق الشاشة الرئيسية. اضغط الزر أدناه، اختر Couchy Launcher في حوار النظام وأكد (اختر \"دائمًا\" إذا طُلب منك).</string>
     <string name="wizard_set_default">تعيين كمشغّل افتراضي</string>
     <string name="wizard_no_dialog_hint">إذا لم يظهر حوار: إعدادات Android &gt; التطبيقات &gt; التطبيقات الافتراضية &gt; تطبيق الشاشة الرئيسية &gt; Couchy Launcher. أو ببساطة اضغط زر الشاشة الرئيسية — سيسأل Android أي مشغّل تريد استخدامه.</string>
+    <string name="wizard_no_home_settings_body">"لا يحتوي برنامج هذا التلفاز على إعداد «تطبيق الشاشة الرئيسية» (برنامج الشركة المصنّعة، مثل OPPO/ColorOS TV). عيّن Couchy كشاشة رئيسية مرة واحدة من حاسوب على الشبكة نفسها:"</string>
     <string name="wizard_vpn_title">زر VPN</string>
     <string name="wizard_vpn_body">إذا كنت تستخدم تطبيق VPN، اختره — سيفتحه زر VPN في شريط الحالة. تخطي وسيبقى زر VPN مخفيًا (يمكنك تمكينه لاحقًا من الإعدادات › شريط الحالة).</string>
     <string name="wizard_vpn_none">لم يتم اكتشاف أي تطبيق VPN على هذا الجهاز.</string>

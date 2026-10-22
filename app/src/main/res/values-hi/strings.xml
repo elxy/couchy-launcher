@@ -52,6 +52,7 @@
     <string name="item_load_config">कॉन्फ़िगरेशन लोड करें</string>
     <string name="item_load_config_sub">सहेजी गई फ़ाइल से सेटिंग्स पुनर्स्थापित करें</string>
     <string name="toast_config_saved">कॉन्फ़िगरेशन सहेजा गया</string>
+    <string name="toast_need_storage_save">कॉन्फ़िगरेशन सहेजने के लिए संग्रहण अनुमति आवश्यक है</string>
     <string name="toast_config_loaded">कॉन्फ़िगरेशन लोड — पुनः आरंभ आवश्यक</string>
     <string name="toast_config_bad">अमान्य बैकअप फ़ाइल</string>
     <string name="item_android_settings">Android सेटिंग्स</string>
@@ -142,6 +143,11 @@
     <string name="about_foss">मुक्त &amp; ओपन सोर्स</string>
     <string name="about_license">GNU General Public License v3.0 (GPLv3) के तहत लाइसेंस प्राप्त। आप Couchy Launcher का उपयोग, अध्ययन, साझा और संशोधन करने के लिए स्वतंत्र हैं।</string>
     <string name="about_thirdparty">सोफ़ा कलाकृति: Twemoji (MIT)। हवाई वीडियो: Apple, Amazon और समुदाय संग्रह, उनके मालिकों से स्ट्रीम किए गए।</string>
+    <string name="keep_resident">लॉन्चर को मेमोरी में रखें</string>
+    <string name="keep_resident_sub">लौटने पर तुरंत फिर से खुलने के लिए मेमोरी में रहता है। एक सूचना दिखाता है।</string>
+    <string name="keep_alive_title">लॉन्चर सक्रिय</string>
+    <string name="keep_alive_channel">लॉन्चर सक्रिय</string>
+    <string name="keep_alive_text">होम स्क्रीन तुरंत फिर खुलती है। लॉन्चर सेटिंग में बंद करें।</string>
     <string name="rerun_wizard">सेटअप विज़ार्ड फिर से चलाएँ</string>
     <string name="rerun_wizard_sub">डिफ़ॉल्ट लॉन्चर सेटअप और पहली बार की युक्तियाँ</string>
 
@@ -161,6 +167,7 @@
     <string name="wizard_aosp_body">यह डिवाइस होम ऐप चुनने की अनुमति देता है। नीचे दिए बटन को दबाएँ, सिस्टम डायलॉग में Couchy Launcher चुनें और पुष्टि करें (पूछे जाने पर \"हमेशा\" चुनें)।</string>
     <string name="wizard_set_default">डिफ़ॉल्ट लॉन्चर के रूप में सेट करें</string>
     <string name="wizard_no_dialog_hint">यदि कोई डायलॉग दिखाई नहीं देता: Android सेटिंग्स &gt; ऐप्स &gt; डिफ़ॉल्ट ऐप्स &gt; होम ऐप &gt; Couchy Launcher। या बस होम बटन दबाएँ — Android पूछेगा कि कौन सा लॉन्चर उपयोग करना है।</string>
+    <string name="wizard_no_home_settings_body">"इस टीवी के फ़र्मवेयर में «होम ऐप» की कोई सेटिंग नहीं है (विक्रेता फ़र्मवेयर, जैसे OPPO/ColorOS TV)। एक ही नेटवर्क पर मौजूद कंप्यूटर से एक बार Couchy को होम स्क्रीन के रूप में सेट करें:"</string>
     <string name="wizard_vpn_title">VPN बटन</string>
     <string name="wizard_vpn_body">यदि आप VPN ऐप का उपयोग करते हैं, तो इसे चुनें — स्टेटस बार में VPN बटन इसे खोलेगा। छोड़ें और VPN बटन छिपा रहेगा (आप इसे बाद में सेटिंग्स › स्टेटस बार से सक्षम कर सकते हैं)।</string>
     <string name="wizard_vpn_none">इस डिवाइस पर कोई VPN ऐप नहीं पाया गया।</string>

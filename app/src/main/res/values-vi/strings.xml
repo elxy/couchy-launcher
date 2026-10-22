@@ -52,6 +52,7 @@
     <string name="item_load_config">Tải cấu hình</string>
     <string name="item_load_config_sub">Khôi phục cài đặt từ tệp đã lưu</string>
     <string name="toast_config_saved">Đã lưu cấu hình</string>
+    <string name="toast_need_storage_save">Cần quyền truy cập bộ nhớ để lưu cấu hình</string>
     <string name="toast_config_loaded">Đã tải cấu hình — khởi động lại được khuyến nghị</string>
     <string name="toast_config_bad">Tệp sao lưu không hợp lệ</string>
     <string name="item_android_settings">Cài đặt Android</string>
@@ -142,6 +143,11 @@
     <string name="about_foss">Tự do &amp; nguồn mở</string>
     <string name="about_license">Được cấp phép theo GNU General Public License v3.0 (GPLv3). Bạn được tự do sử dụng, nghiên cứu, chia sẻ và sửa đổi Couchy Launcher.</string>
     <string name="about_thirdparty">Hình ghế sofa: Twemoji (MIT). Video trên không: bộ sưu tập Apple, Amazon và cộng đồng, phát từ chủ sở hữu.</string>
+    <string name="keep_resident">Giữ trình khởi chạy trong bộ nhớ</string>
+    <string name="keep_resident_sub">Lưu lại trong bộ nhớ để quay lại từ ứng dụng ngay lập tức. Hiển thị thông báo.</string>
+    <string name="keep_alive_title">Trình khởi chạy thường trú</string>
+    <string name="keep_alive_channel">Trình khởi chạy thường trú</string>
+    <string name="keep_alive_text">Giữ màn hình chính mở lại tức thì. Tắt trong cài đặt trình khởi chạy.</string>
     <string name="rerun_wizard">Chạy lại trình hướng dẫn cài đặt</string>
     <string name="rerun_wizard_sub">Thiết lập launcher mặc định và mẹo lần đầu</string>
 
@@ -161,6 +167,7 @@
     <string name="wizard_aosp_body">Thiết bị này cho phép chọn ứng dụng màn hình chính. Nhấn nút bên dưới, chọn Couchy Launcher trong hộp thoại hệ thống và xác nhận (chọn \"Luôn luôn\" nếu được hỏi).</string>
     <string name="wizard_set_default">Đặt làm launcher mặc định</string>
     <string name="wizard_no_dialog_hint">Nếu không có hộp thoại xuất hiện: Cài đặt Android &gt; Ứng dụng &gt; Ứng dụng mặc định &gt; Ứng dụng màn hình chính &gt; Couchy Launcher. Hoặc chỉ cần nhấn nút Home — Android sẽ hỏi dùng launcher nào.</string>
+    <string name="wizard_no_home_settings_body">"Phần mềm của TV này không có mục cài đặt «ứng dụng màn hình chính» (phần mềm của hãng, ví dụ OPPO/ColorOS TV). Hãy đặt Couchy làm màn hình chính một lần từ máy tính trong cùng mạng:"</string>
     <string name="wizard_vpn_title">Nút VPN</string>
     <string name="wizard_vpn_body">Nếu bạn dùng ứng dụng VPN, hãy chọn nó — nút VPN trên thanh trạng thái sẽ mở nó. Bỏ qua và nút VPN vẫn bị ẩn (bạn có thể bật sau trong Cài đặt › Thanh trạng thái).</string>
     <string name="wizard_vpn_none">Không phát hiện ứng dụng VPN nào trên thiết bị này.</string>

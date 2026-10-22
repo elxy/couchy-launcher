@@ -52,6 +52,7 @@
     <string name="item_load_config">Configuratie laden</string>
     <string name="item_load_config_sub">Instellingen herstellen uit bestand</string>
     <string name="toast_config_saved">Configuratie opgeslagen</string>
+    <string name="toast_need_storage_save">Opslagtoestemming is nodig om de configuratie op te slaan</string>
     <string name="toast_config_loaded">Configuratie geladen — herstart aanbevolen</string>
     <string name="toast_config_bad">Ongeldig of beschadigd back-upbestand</string>
     <string name="item_android_settings">Android-instellingen</string>
@@ -142,6 +143,11 @@
     <string name="about_foss">Vrij &amp; open source</string>
     <string name="about_license">Gelicentieerd onder de GNU General Public License v3.0 (GPLv3). Je bent vrij om Couchy Launcher te gebruiken, bestuderen, delen en wijzigen.</string>
     <string name="about_thirdparty">Bank-illustratie: Twemoji (MIT). Luchtvideo\'s: Apple-, Amazon- en communitycollecties, gestreamd van hun eigenaars.</string>
+    <string name="keep_resident">Launcher in geheugen houden</string>
+    <string name="keep_resident_sub">Blijft in het geheugen zodat terugkeren uit een app direct doorgaat in plaats van herladen. Toont een melding.</string>
+    <string name="keep_alive_title">Launcher actief</string>
+    <string name="keep_alive_channel">Launcher actief</string>
+    <string name="keep_alive_text">Houdt het startscherm direct heropenbaar. Uit te zetten in launcherinstellingen.</string>
     <string name="rerun_wizard">Installatiewizard opnieuw uitvoeren</string>
     <string name="rerun_wizard_sub">Standaardlauncher instellen en eerste gebruikstips</string>
 
@@ -161,6 +167,7 @@
     <string name="wizard_aosp_body">Dit apparaat staat het kiezen van een home-app toe. Druk op de knop hieronder, kies Couchy Launcher in het systeemdialoog en bevestig (kies \"Altijd\" indien gevraagd).</string>
     <string name="wizard_set_default">Instellen als standaardlauncher</string>
     <string name="wizard_no_dialog_hint">Als er geen dialoog verschijnt: Android-instellingen &gt; Apps &gt; Standaardapps &gt; Home-app &gt; Couchy Launcher. Of druk gewoon op de Home-knop — Android zal vragen welke launcher te gebruiken.</string>
+    <string name="wizard_no_home_settings_body">"De firmware van deze tv heeft geen instelling voor de „start-app” (leveranciersfirmware, bijv. OPPO/ColorOS TV). Stel Couchy één keer in als startscherm vanaf een computer in hetzelfde netwerk:"</string>
     <string name="wizard_vpn_title">VPN-knop</string>
     <string name="wizard_vpn_body">Als je een VPN-app gebruikt, kies deze dan — de VPN-knop in de statusbalk zal hem openen. Sla over en de VPN-knop blijft verborgen (je kunt hem later inschakelen in Instellingen › Statusbalk).</string>
     <string name="wizard_vpn_none">Geen VPN-app gedetecteerd op dit apparaat.</string>

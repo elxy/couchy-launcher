@@ -59,6 +59,7 @@
     <string name="item_load_config">加载配置</string>
     <string name="item_load_config_sub">从文件恢复设置</string>
     <string name="toast_config_saved">配置已保存</string>
+    <string name="toast_need_storage_save">保存配置需要存储权限</string>
     <string name="toast_config_loaded">配置已加载 — 建议重启</string>
     <string name="toast_config_bad">备份文件无效或损坏</string>
     <string name="item_android_settings">Android 设置</string>
@@ -155,6 +156,11 @@
     <string name="about_foss">自由开源</string>
     <string name="about_license">基于 GNU General Public License v3.0（GPLv3）许可。您可以自由使用、研究、分享和修改 Couchy Launcher。</string>
     <string name="about_thirdparty">沙发图标：Twemoji（MIT）。航拍视频：Apple、Amazon 和社区合集，从其所有者处串流。</string>
+    <string name="keep_resident">让启动器常驻内存</string>
+    <string name="keep_resident_sub">常驻后台，从应用返回时立即恢复，不再重新加载。会显示一条通知。</string>
+    <string name="keep_alive_title">启动器常驻</string>
+    <string name="keep_alive_channel">启动器常驻</string>
+    <string name="keep_alive_text">让桌面再次打开时立即可用。可在启动器设置中关闭。</string>
     <string name="rerun_wizard">重新运行设置向导</string>
     <string name="rerun_wizard_sub">默认启动器设置和首次使用提示</string>
 
@@ -175,6 +181,7 @@
     <string name="wizard_aosp_body">此设备允许选择主页应用。按下下方按钮，在系统对话框中选择 Couchy 启动器并确认（如果询问，选择「始终」）。</string>
     <string name="wizard_set_default">设为默认启动器</string>
     <string name="wizard_no_dialog_hint">如果没有对话框出现：Android 设置 &gt; 应用 &gt; 默认应用 &gt; 主页应用 &gt; Couchy 启动器。或者直接按主页按钮 — Android 会询问使用哪个启动器。</string>
+    <string name="wizard_no_home_settings_body">"此电视的固件没有「主页应用」设置入口（厂商固件，如 OPPO / ColorOS TV）。请在同局域网的电脑上执行一次，把 Couchy 设为默认桌面："</string>
     <string name="wizard_vpn_title">VPN 按钮</string>
     <string name="wizard_vpn_body">如果使用 VPN 应用，请选择它 — 状态栏中的 VPN 按钮将打开它。跳过则 VPN 按钮保持隐藏（稍后可在设置 › 状态栏中启用）。</string>
     <string name="wizard_vpn_none">此设备上未检测到 VPN 应用。</string>

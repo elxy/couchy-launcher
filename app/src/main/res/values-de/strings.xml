@@ -52,6 +52,7 @@
     <string name="item_load_config">Konfiguration laden</string>
     <string name="item_load_config_sub">Einstellungen aus gespeicherter Datei wiederherstellen</string>
     <string name="toast_config_saved">Konfiguration gespeichert</string>
+    <string name="toast_need_storage_save">Zum Speichern der Konfiguration ist Speicherzugriff nötig</string>
     <string name="toast_config_loaded">Konfiguration geladen — Neustart empfohlen</string>
     <string name="toast_config_bad">Ungültige oder beschädigte Backup-Datei</string>
     <string name="item_android_settings">Android-Einstellungen</string>
@@ -142,6 +143,11 @@
     <string name="about_foss">Frei &amp; quelloffen</string>
     <string name="about_license">Lizenziert unter der GNU General Public License v3.0 (GPLv3). Sie dürfen Couchy Launcher frei verwenden, studieren, teilen und verändern.</string>
     <string name="about_thirdparty">Couch-Grafik: Twemoji (MIT). Luftvideos: Apple-, Amazon- und Community-Sammlungen, gestreamt von ihren Eigentümern.</string>
+    <string name="keep_resident">Launcher im Speicher halten</string>
+    <string name="keep_resident_sub">Bleibt im Speicher, damit die Rückkehr aus einer App sofort weitergeht statt neu zu laden. Zeigt eine Benachrichtigung.</string>
+    <string name="keep_alive_title">Launcher aktiv</string>
+    <string name="keep_alive_channel">Launcher aktiv</string>
+    <string name="keep_alive_text">Macht den Startbildschirm sofort wieder verfügbar. In den Launcher-Einstellungen abschaltbar.</string>
     <string name="rerun_wizard">Einrichtungsassistent erneut ausführen</string>
     <string name="rerun_wizard_sub">Standard-Launcher-Einrichtung und Erste-Schritte-Tipps</string>
 
@@ -161,6 +167,7 @@
     <string name="wizard_aosp_body">Dieses Gerät erlaubt die Auswahl einer Home-App. Drücken Sie die Taste unten, wählen Sie Couchy Launcher im Systemdialog und bestätigen Sie (wählen Sie „Immer“).</string>
     <string name="wizard_set_default">Als Standard-Launcher festlegen</string>
     <string name="wizard_no_dialog_hint">Wenn kein Dialog erscheint: Android-Einstellungen &gt; Apps &gt; Standard-Apps &gt; Home-App &gt; Couchy Launcher. Oder drücken Sie einfach die Home-Taste — Android fragt, welcher Launcher verwendet werden soll.</string>
+    <string name="wizard_no_home_settings_body">"Die Firmware dieses Fernsehers hat keine Einstellung „Start-App“ (Hersteller-Firmware, z. B. OPPO/ColorOS TV). Lege Couchy einmalig von einem Computer im selben Netzwerk als Startbildschirm fest:"</string>
     <string name="wizard_vpn_title">VPN-Taste</string>
     <string name="wizard_vpn_body">Wenn Sie eine VPN-App nutzen, wählen Sie sie aus — die VPN-Taste in der Statusleiste öffnet sie. Überspringen und die VPN-Taste bleibt versteckt (später unter Einstellungen › Statusleiste aktivierbar).</string>
     <string name="wizard_vpn_none">Keine VPN-App auf diesem Gerät erkannt.</string>

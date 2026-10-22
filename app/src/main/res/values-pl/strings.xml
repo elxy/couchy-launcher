@@ -52,6 +52,7 @@
     <string name="item_load_config">Wczytaj konfigurację</string>
     <string name="item_load_config_sub">Przywróć ustawienia z pliku</string>
     <string name="toast_config_saved">Konfiguracja zapisana</string>
+    <string name="toast_need_storage_save">Zapisanie konfiguracji wymaga uprawnienia do pamięci</string>
     <string name="toast_config_loaded">Konfiguracja wczytana — zalecany restart</string>
     <string name="toast_config_bad">Nieprawidłowy plik kopii zapasowej</string>
     <string name="item_android_settings">Ustawienia Androida</string>
@@ -142,6 +143,11 @@
     <string name="about_foss">Wolne i otwarte oprogramowanie</string>
     <string name="about_license">Na licencji GNU General Public License v3.0 (GPLv3). Możesz swobodnie używać, studiować, udostępniać i modyfikować Couchy Launcher.</string>
     <string name="about_thirdparty">Grafika kanapy: Twemoji (MIT). Filmy lotnicze: kolekcje Apple, Amazon i społeczności, przesyłane od ich właścicieli.</string>
+    <string name="keep_resident">Utrzymuj program w pamięci</string>
+    <string name="keep_resident_sub">Pozostaje w pamięci, więc powrót z aplikacji jest natychmiastowy. Pokazuje powiadomienie.</string>
+    <string name="keep_alive_title">Program uruchomiony</string>
+    <string name="keep_alive_channel">Program uruchomiony</string>
+    <string name="keep_alive_text">Ekran główny otwiera się natychmiast. Wyłącz w ustawieniach programu.</string>
     <string name="rerun_wizard">Uruchom ponownie kreatora konfiguracji</string>
     <string name="rerun_wizard_sub">Konfiguracja domyślnego launchera i wskazówki na początek</string>
 
@@ -161,6 +167,7 @@
     <string name="wizard_aosp_body">To urządzenie umożliwia wybór aplikacji głównej. Naciśnij przycisk poniżej, wybierz Couchy Launcher w oknie systemowym i potwierdź (wybierz „Zawsze” po pytaniu).</string>
     <string name="wizard_set_default">Ustaw jako domyślny launcher</string>
     <string name="wizard_no_dialog_hint">Jeśli nie pojawi się okno dialogowe: Ustawienia Androida &gt; Aplikacje &gt; Aplikacje domyślne &gt; Aplikacja główna &gt; Couchy Launcher. Lub po prostu naciśnij przycisk Home — Android zapyta, którego launchera użyć.</string>
+    <string name="wizard_no_home_settings_body">"Firmware tego telewizora nie ma ustawienia „aplikacja ekranu głównego” (firmware producenta, np. OPPO/ColorOS TV). Ustaw Couchy jako ekran główny raz, z komputera w tej samej sieci:"</string>
     <string name="wizard_vpn_title">Przycisk VPN</string>
     <string name="wizard_vpn_body">Jeśli używasz aplikacji VPN, wybierz ją — przycisk VPN na pasku stanu ją otworzy. Pomiń, a przycisk VPN pozostanie ukryty (możesz go włączyć później w Ustawienia › Pasek stanu).</string>
     <string name="wizard_vpn_none">Nie wykryto aplikacji VPN na tym urządzeniu.</string>

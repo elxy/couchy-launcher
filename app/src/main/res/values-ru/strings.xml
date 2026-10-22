@@ -52,6 +52,7 @@
     <string name="item_load_config">Загрузить конфигурацию</string>
     <string name="item_load_config_sub">Восстановить настройки из файла</string>
     <string name="toast_config_saved">Конфигурация сохранена</string>
+    <string name="toast_need_storage_save">Для сохранения конфигурации нужен доступ к памяти</string>
     <string name="toast_config_loaded">Конфигурация загружена — перезапуск рекомендуется</string>
     <string name="toast_config_bad">Неверный файл резервной копии</string>
     <string name="item_android_settings">Настройки Android</string>
@@ -142,6 +143,11 @@
     <string name="about_foss">Свободное и открытое ПО</string>
     <string name="about_license">Лицензия GNU General Public License v3.0 (GPLv3). Вы можете свободно использовать, изучать, делиться и изменять Couchy Launcher.</string>
     <string name="about_thirdparty">Дизайн дивана: Twemoji (MIT). Аэровидео: коллекции Apple, Amazon и сообщества, транслируются от их владельцев.</string>
+    <string name="keep_resident">Держать запуск в памяти</string>
+    <string name="keep_resident_sub">Остаётся в памяти, поэтому возврат из приложения мгновенный. Показывает уведомление.</string>
+    <string name="keep_alive_title">Запуск остаётся в памяти</string>
+    <string name="keep_alive_channel">Запуск в памяти</string>
+    <string name="keep_alive_text">Главный экран открывается мгновенно. Отключается в настройках запуска.</string>
     <string name="rerun_wizard">Запустить мастер настройки снова</string>
     <string name="rerun_wizard_sub">Настройка лаунчера по умолчанию и советы для начала</string>
 
@@ -161,6 +167,7 @@
     <string name="wizard_aosp_body">Это устройство позволяет выбрать домашнее приложение. Нажмите кнопку ниже, выберите Couchy Launcher в системном диалоге и подтвердите (выберите «Всегда», если спросят).</string>
     <string name="wizard_set_default">Установить лаунчером по умолчанию</string>
     <string name="wizard_no_dialog_hint">Если диалог не появляется: Настройки Android &gt; Приложения &gt; Приложения по умолчанию &gt; Домашнее приложение &gt; Couchy Launcher. Или просто нажмите кнопку «Домой» — Android спросит, какой лаунчер использовать.</string>
+    <string name="wizard_no_home_settings_body">"В прошивке этого телевизора нет настройки «приложение главного экрана» (прошивка производителя, например OPPO/ColorOS TV). Один раз назначьте Couchy главным экраном с компьютера в той же сети:"</string>
     <string name="wizard_vpn_title">Кнопка VPN</string>
     <string name="wizard_vpn_body">Если вы используете VPN-приложение, выберите его — кнопка VPN в строке состояния будет открывать его. Пропустите, и кнопка VPN останется скрытой (можно включить позже в Настройки › Строка состояния).</string>
     <string name="wizard_vpn_none">VPN-приложений на этом устройстве не обнаружено.</string>

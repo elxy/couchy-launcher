@@ -150,9 +150,11 @@ fun AppCard(
                 .fillMaxWidth()
                 .aspectRatio(16f / 9f)
         ) {
-            if (app.banner != null) {
+            val banner = appBanner(app)
+            val icon = appIcon(app)
+            if (banner != null) {
                 Image(
-                    bitmap = app.banner,
+                    bitmap = banner,
                     contentDescription = app.label,
                     contentScale = ContentScale.Crop,
                     // Own render layer: the focus scale animation transforms the
@@ -182,9 +184,9 @@ fun AppCard(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        if (app.icon != null) {
+                        if (icon != null) {
                             Image(
-                                bitmap = app.icon,
+                                bitmap = icon,
                                 contentDescription = null,
                                 modifier = Modifier.size(48.dp),
                             )

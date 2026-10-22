@@ -16,6 +16,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.io.File
 
 /**
@@ -33,6 +37,12 @@ data class AppEntry(
     val autoCategory: String,
     /** Tile color precomputed at scan time — never hashed during composition. */
     val tile: Color,
+    /**
+     * Cold-start only: the artwork is still on disk, and [banner] / [icon] are
+     * null because nothing has been decoded yet. The UI decodes what it draws
+     * from here (see `appBanner`/`appIcon` in ui/AppCard.kt).
+     */
+    val art: AppRepository.SnapshotArt? = null,
     /** lastUpdateTime of the package — used to reuse entries across rescans. */
     val stamp: Long,
     /** firstInstallTime — tiebreak so a newly installed app sorts last in its section. */
@@ -43,6 +53,49 @@ object AppRepository {
 
     /** Reserved id for the auto-filled "All apps" section (every launchable app). */
     const val ALL_APPS_ID = "__all__"
+
+    /**
+     * On-disk copy of the last successful scan, so a COLD start can draw the
+     * launcher on the first frame instead of waiting ~2-4s for the real scan
+     * (icon decode dominates) behind a loading screen.
+     *
+     * Only the cheap, serializable half is persisted — pkg/label/category/
+     * stamps. Artwork is NOT: it already lives in filesDir/iconcache as
+     * `<pkg>-<stamp>-*.webp`, so [loadSnapshot] points AppEntry at those files
+     * and the grid decodes them on demand, exactly like a cache hit.
+     */
+    private const val SNAPSHOT_NAME = "apps.snapshot.json"
+
+    @Serializable
+    private data class SnapshotEntry(
+        val pkg: String,
+        val label: String,
+        val autoCategory: String,
+        val stamp: Long,
+        val firstInstall: Long,
+        val hasBanner: Boolean,
+    )
+
+    @Serializable
+    private data class Snapshot(
+        val version: Int = 1,
+        val entries: List<SnapshotEntry>,
+    )
+
+    private val snapshotJson = Json { ignoreUnknownKeys = true }
+
+    /**
+     * Last scan as rendered by [scan], held as a FILE reference rather than a
+     * decoded bitmap: a cold start must not allocate ~100MB of textures before
+     * it may show anything.
+     */
+    @Immutable
+    data class SnapshotArt(
+        val bannerFile: File?,
+        val iconFile: File?,
+        val widthPx: Int,
+        val heightPx: Int,
+    )
 
     /** Well-known packages -> category id */
     private val KNOWN = mapOf(
@@ -69,6 +122,7 @@ object AppRepository {
         "tv.danmaku.bilibilihd" to "streaming", // 哔哩哔哩 HD
         "com.douyu.xl.douyutv" to "streaming", // 斗鱼
         "com.gitvdemo.video" to "streaming", // 银河奇异果 (iQIYI TV)
+        "com.gitvvideo.oppo" to "streaming", // 银河奇异果, OPPO TV preinstall (same app, own package)
         "com.ktcp.video" to "streaming", // 云视听极光 (Tencent Video TV)
         "com.cibn.tv" to "streaming", // CIBN酷喵 (Youku TV)
         "com.newtv.cboxtv" to "streaming", // 央视频TV版
@@ -186,7 +240,90 @@ object AppRepository {
         // remember{}/State comparisons skip and nothing recomposes.
         if (result == memoryCache) return@coroutineScope memoryCache!!
         memoryCache = result
+        // Persist the cheap half for the NEXT cold start. Written off the caller's
+        // thread: a few KB of JSON, but the caller is the UI's frame-producing
+        // scope and this must never show up as a hitch.
+        withContext(Dispatchers.IO) {
+            writeSnapshot(File(context.filesDir, SNAPSHOT_NAME), result, bannerW, bannerH)
+        }
         result
+    }
+
+    /**
+     * The last scan, reconstructed from disk so a COLD start can draw the grid
+     * on its first frame. Returns null on the first run after install, after an
+     * unreadable/old snapshot, or on any IO problem — the caller then falls back
+     * to waiting for [scan], which is what happened before this existed.
+     *
+     * Blocking file read: call it from a background dispatcher.
+     */
+    fun loadSnapshot(context: Context): List<AppEntry>? {
+        val filesDir = context.filesDir
+        val cacheDir = File(filesDir, "iconcache")
+        val snapshot = runCatching {
+            snapshotJson.decodeFromString<Snapshot>(
+                File(filesDir, SNAPSHOT_NAME).readText()
+            )
+        }.getOrNull() ?: return null
+        if (snapshot.entries.isEmpty()) return null
+
+        val density = context.resources.displayMetrics.density
+        val bannerW = (270 * density).toInt().coerceIn(320, 720)
+        val bannerH = bannerW * 9 / 16
+
+        return snapshot.entries.mapNotNull { e ->
+            // Both artwork files are named after the package's lastUpdateTime, so a
+            // missing file means the app was updated and the cached artwork was
+            // swept — that entry must come from the real scan, not from a stale
+            // snapshot row pointing at nothing.
+            val banner = File(cacheDir, "${e.pkg}-${e.stamp}-b$bannerW.webp")
+            val icon = File(cacheDir, "${e.pkg}-${e.stamp}-i128.webp")
+            val bannerFile = banner.takeIf { e.hasBanner && it.exists() }
+            val iconFile = icon.takeIf { !e.hasBanner && it.exists() }
+            if (e.hasBanner && bannerFile == null) return@mapNotNull null
+            if (!e.hasBanner && iconFile == null) return@mapNotNull null
+            AppEntry(
+                pkg = e.pkg,
+                label = e.label,
+                banner = null,
+                icon = null,
+                autoCategory = e.autoCategory,
+                tile = tileColor(e.pkg),
+                art = SnapshotArt(bannerFile, iconFile, bannerW, bannerH),
+                stamp = e.stamp,
+                firstInstall = e.firstInstall,
+            )
+        }
+    }
+
+    private fun writeSnapshot(
+        file: File,
+        entries: List<AppEntry>,
+        bannerW: Int,
+        bannerH: Int,
+    ) {
+        runCatching {
+            val payload = Snapshot(
+                entries = entries.map { e ->
+                    SnapshotEntry(
+                        pkg = e.pkg,
+                        label = e.label,
+                        autoCategory = e.autoCategory,
+                        stamp = e.stamp,
+                        firstInstall = e.firstInstall,
+                        hasBanner = e.banner != null,
+                    )
+                }
+            )
+            // Atomic: a torn snapshot after a kill would make the next cold start
+            // fall back to the slow path (harmless) or, worse, half-draw a grid.
+            val tmp = File(file.parentFile, "${file.name}.tmp")
+            tmp.writeText(snapshotJson.encodeToString(payload))
+            if (!tmp.renameTo(file)) {
+                file.delete()
+                tmp.renameTo(file)
+            }
+        }
     }
 
     /**

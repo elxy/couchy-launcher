@@ -52,6 +52,7 @@
     <string name="item_load_config">설정 불러오기</string>
     <string name="item_load_config_sub">저장된 파일에서 설정 복원</string>
     <string name="toast_config_saved">설정이 저장되었습니다</string>
+    <string name="toast_need_storage_save">설정을 저장하려면 저장소 권한이 필요합니다</string>
     <string name="toast_config_loaded">설정을 불러왔습니다 — 다시 시작 권장</string>
     <string name="toast_config_bad">잘못된 백업 파일</string>
     <string name="item_android_settings">Android 설정</string>
@@ -142,6 +143,11 @@
     <string name="about_foss">자유 &amp; 오픈소스</string>
     <string name="about_license">GNU General Public License v3.0 (GPLv3)에 따라 라이선스가 부여됩니다. Couchy Launcher를 자유롭게 사용, 연구, 공유 및 수정할 수 있습니다.</string>
     <string name="about_thirdparty">소파 아트워크: Twemoji (MIT). 항공 영상: Apple, Amazon 및 커뮤니티 컬렉션, 소유자로부터 스트리밍.</string>
+    <string name="keep_resident">런처를 메모리에 유지</string>
+    <string name="keep_resident_sub">메모리에 남아 앱에서 돌아올 때 다시 로드하지 않고 즉시 복귀합니다. 알림이 표시됩니다.</string>
+    <string name="keep_alive_title">런처 상주</string>
+    <string name="keep_alive_channel">런처 상주</string>
+    <string name="keep_alive_text">홈 화면을 즉시 다시 열 수 있게 유지합니다. 런처 설정에서 끌 수 있습니다.</string>
     <string name="rerun_wizard">설정 마법사 다시 실행</string>
     <string name="rerun_wizard_sub">기본 런처 설정 및 첫 실행 팁</string>
 
@@ -161,6 +167,7 @@
     <string name="wizard_aosp_body">이 기기는 홈 앱 선택을 허용합니다. 아래 버튼을 누르고 시스템 대화상자에서 Couchy Launcher를 선택한 후 확인하세요 (\"항상\" 선택).</string>
     <string name="wizard_set_default">기본 런처로 설정</string>
     <string name="wizard_no_dialog_hint">대화상자가 나타나지 않으면: Android 설정 &gt; 앱 &gt; 기본 앱 &gt; 홈 앱 &gt; Couchy Launcher. 또는 홈 버튼을 누르기만 하면 Android에서 어떤 런처를 사용할지 물어봅니다.</string>
+    <string name="wizard_no_home_settings_body">"이 TV의 펌웨어에는 «홈 앱» 설정이 없습니다(제조사 펌웨어, 예: OPPO/ColorOS TV). 같은 네트워크의 컴퓨터에서 한 번만 Couchy를 홈 화면으로 설정하세요:"</string>
     <string name="wizard_vpn_title">VPN 버튼</string>
     <string name="wizard_vpn_body">VPN 앱을 사용하는 경우 선택하세요 — 상태 표시줄의 VPN 버튼이 해당 앱을 엽니다. 건너뛰면 VPN 버튼이 숨겨집니다 (나중에 설정 › 상태 표시줄에서 활성화 가능).</string>
     <string name="wizard_vpn_none">이 기기에서 VPN 앱이 감지되지 않았습니다.</string>

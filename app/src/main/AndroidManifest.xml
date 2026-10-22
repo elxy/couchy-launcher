@@ -21,6 +21,12 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <!-- Config backup: below Android 10 the public Downloads folder can only be
+         written through the plain File API, which needs this. From API 29 up the
+         backup goes through MediaStore instead, so the permission stops there. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
     <!-- Only used to stream the built-in aerial videos (Apple/Amazon CDNs).
          The launcher makes no other network requests. -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -28,6 +34,11 @@
     <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
     <!-- Show the system uninstall dialog -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <!-- Optional: keep the launcher resident so returning from a video app does not
+         cost a cold start. Off by default, toggled in launcher settings — see
+         KeepAliveService for why this is the only route that works here. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <!-- Package visibility (Android 11+): we resolve the document picker before launching it,
          so we must be able to see who answers these intents. See OpenDocumentOrGetContent. -->
@@ -60,11 +71,18 @@
             android:screenOrientation="landscape"
             android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenSize|screenLayout|density|uiMode">
 
-            <!-- Home-screen replacement -->
+            <!-- Home-screen replacement.
+                 HOME and DEFAULT must stay in the SAME filter: AOSP resolves home
+                 candidates with MATCH_DEFAULT_ONLY, so a filter without DEFAULT
+                 never appears in the home list. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
+                <!-- Vendor marker: ColorOS TV (OPPO/OnePlus) only waits for a home
+                     activity carrying this private category at boot and hangs on the
+                     boot animation without it. Ignored by AOSP/Google TV. -->
+                <category android:name="com.heytap.tv.launcher.category.MODERN_HOME" />
             </intent-filter>
             <!-- Visible in the stock TV launcher -->
             <intent-filter>
@@ -77,5 +95,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Optional resident mode (see KeepAliveService). Not exported, no
+             intent filter: only this app starts it. -->
+        <service
+            android:name=".KeepAliveService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps the home launcher process resident so returning from
+                    another app resumes instantly instead of cold-starting." />
+        </service>
     </application>
 </manifest>

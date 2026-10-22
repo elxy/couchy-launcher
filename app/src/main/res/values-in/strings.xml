@@ -52,6 +52,7 @@
     <string name="item_load_config">Muat konfigurasi</string>
     <string name="item_load_config_sub">Pulihkan pengaturan dari file tersimpan</string>
     <string name="toast_config_saved">Konfigurasi disimpan</string>
+    <string name="toast_need_storage_save">Izin penyimpanan diperlukan untuk menyimpan konfigurasi</string>
     <string name="toast_config_loaded">Konfigurasi dimuat — mulai ulang disarankan</string>
     <string name="toast_config_bad">File cadangan tidak valid atau rusak</string>
     <string name="item_android_settings">Pengaturan Android</string>
@@ -142,6 +143,11 @@
     <string name="about_foss">Bebas &amp; sumber terbuka</string>
     <string name="about_license">Dilisensikan di bawah GNU General Public License v3.0 (GPLv3). Anda bebas menggunakan, mempelajari, membagikan, dan memodifikasi Couchy Launcher.</string>
     <string name="about_thirdparty">Seni sofa: Twemoji (MIT). Video udara: koleksi Apple, Amazon, dan komunitas, streaming dari pemiliknya.</string>
+    <string name="keep_resident">Simpan launcher di memori</string>
+    <string name="keep_resident_sub">Tetap aktif agar kembali dari aplikasi langsung tanpa memuat ulang. Menampilkan notifikasi.</string>
+    <string name="keep_alive_title">Launcher tetap aktif</string>
+    <string name="keep_alive_channel">Launcher tetap aktif</string>
+    <string name="keep_alive_text">Layar utama langsung terbuka lagi. Matikan di pengaturan launcher.</string>
     <string name="rerun_wizard">Jalankan wizard penyiapan lagi</string>
     <string name="rerun_wizard_sub">Penyiapan launcher default dan tips pertama kali</string>
 
@@ -161,6 +167,7 @@
     <string name="wizard_aosp_body">Perangkat ini mengizinkan pemilihan aplikasi utama. Tekan tombol di bawah, pilih Couchy Launcher di dialog sistem dan konfirmasi (pilih \"Selalu\" jika diminta).</string>
     <string name="wizard_set_default">Atur sebagai launcher default</string>
     <string name="wizard_no_dialog_hint">Jika tidak ada dialog muncul: Pengaturan Android &gt; Aplikasi &gt; Aplikasi default &gt; Aplikasi utama &gt; Couchy Launcher. Atau cukup tekan tombol Home — Android akan menanyakan launcher mana yang akan digunakan.</string>
+    <string name="wizard_no_home_settings_body">"Firmware TV ini tidak punya pengaturan «aplikasi layar utama» (firmware vendor, mis. OPPO/ColorOS TV). Tetapkan Couchy sebagai layar utama sekali dari komputer di jaringan yang sama:"</string>
     <string name="wizard_vpn_title">Tombol VPN</string>
     <string name="wizard_vpn_body">Jika Anda menggunakan aplikasi VPN, pilih — tombol VPN di status bar akan membukanya. Lewati dan tombol VPN tetap tersembunyi (Anda dapat mengaktifkannya nanti di Pengaturan › Status bar).</string>
     <string name="wizard_vpn_none">Tidak ada aplikasi VPN terdeteksi di perangkat ini.</string>

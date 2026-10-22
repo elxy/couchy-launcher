@@ -52,6 +52,7 @@
     <string name="item_load_config">โหลดการตั้งค่า</string>
     <string name="item_load_config_sub">กู้คืนการตั้งค่าจากไฟล์</string>
     <string name="toast_config_saved">บันทึกการตั้งค่าแล้ว</string>
+    <string name="toast_need_storage_save">ต้องได้รับอนุญาตการเข้าถึงที่จัดเก็บเพื่อบันทึกการตั้งค่า</string>
     <string name="toast_config_loaded">โหลดการตั้งค่าแล้ว — แนะนำให้เริ่มใหม่</string>
     <string name="toast_config_bad">ไฟล์สำรองข้อมูลไม่ถูกต้อง</string>
     <string name="item_android_settings">การตั้งค่า Android</string>
@@ -142,6 +143,11 @@
     <string name="about_foss">ฟรี &amp; โอเพนซอร์ส</string>
     <string name="about_license">ได้รับอนุญาตภายใต้ GNU General Public License v3.0 (GPLv3) คุณมีอิสระในการใช้ ศึกษา แบ่งปัน และแก้ไข Couchy Launcher</string>
     <string name="about_thirdparty">ภาพโซฟา: Twemoji (MIT) วิดีโอทางอากาศ: คอลเล็กชัน Apple, Amazon และชุมชน สตรีมจากเจ้าของ</string>
+    <string name="keep_resident">เก็บตัวเรียกใช้งานไว้ในหน่วยความจำ</string>
+    <string name="keep_resident_sub">อยู่ในหน่วยความจำเพื่อกลับจากแอปได้ทันที ไม่ต้องโหลดใหม่ แสดงการแจ้งเตือน</string>
+    <string name="keep_alive_title">ตัวเรียกใช้งานทำงานอยู่</string>
+    <string name="keep_alive_channel">ตัวเรียกใช้งานทำงานอยู่</string>
+    <string name="keep_alive_text">ทำให้หน้าจอหลักเปิดได้ทันที ปิดได้ในการตั้งค่าตัวเรียกใช้งาน</string>
     <string name="rerun_wizard">เรียกใช้ตัวช่วยตั้งค่าอีกครั้ง</string>
     <string name="rerun_wizard_sub">การตั้งค่าลอนเชอร์เริ่มต้นและเคล็ดลับการใช้งานครั้งแรก</string>
 
@@ -161,6 +167,7 @@
     <string name="wizard_aosp_body">อุปกรณ์นี้อนุญาตให้เลือกแอปหลักได้ กดปุ่มด้านล่าง เลือก Couchy Launcher ในไดอะล็อกระบบและยืนยัน (เลือก \"เสมอ\" หากถาม)</string>
     <string name="wizard_set_default">ตั้งเป็นลอนเชอร์เริ่มต้น</string>
     <string name="wizard_no_dialog_hint">หากไม่มีไดอะล็อกปรากฏ: การตั้งค่า Android &gt; แอป &gt; แอปเริ่มต้น &gt; แอปหลัก &gt; Couchy Launcher หรือเพียงกดปุ่มโฮม — Android จะถามว่าจะใช้ลอนเชอร์ใด</string>
+    <string name="wizard_no_home_settings_body">"เฟิร์มแวร์ของทีวีนี้ไม่มีตัวเลือก «แอปหน้าจอหลัก» (เฟิร์มแวร์ของผู้ผลิต เช่น OPPO/ColorOS TV) ตั้งค่า Couchy เป็นหน้าจอหลักหนึ่งครั้งจากคอมพิวเตอร์ในเครือข่ายเดียวกัน:"</string>
     <string name="wizard_vpn_title">ปุ่ม VPN</string>
     <string name="wizard_vpn_body">หากคุณใช้แอป VPN เลือกมัน — ปุ่ม VPN ในแถบสถานะจะเปิดมัน ข้ามแล้วปุ่ม VPN จะยังคงซ่อนอยู่ (คุณสามารถเปิดใช้ในภายหลังได้ที่การตั้งค่า › แถบสถานะ)</string>
     <string name="wizard_vpn_none">ไม่พบแอป VPN บนอุปกรณ์นี้</string>

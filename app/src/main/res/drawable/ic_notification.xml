@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification small icon: must be a flat white silhouette on transparency.
+     A coloured icon (like ic_couch) is drawn as a featureless white blob here. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFFFF">
+    <!-- Couch back + seat -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4,10h16a2,2 0 0 1 2,2v5h-2v-3H4v3H2v-5a2,2 0 0 1 2,-2z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M5,6.5A2.5,2.5 0 0 1 7.5,4h9A2.5,2.5 0 0 1 19,6.5V9H5V6.5z" />
+    <!-- Legs -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M3,17h2v3H3zM19,17h2v3h-2z" />
+</vector>

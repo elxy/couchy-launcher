@@ -81,6 +81,11 @@ data class LauncherConfig(
      *  Youku) is focused in the dock, show its hot titles above the icons
      *  (fetches their public web pages — see data/Shelf.kt). */
     val shelfEnabled: Boolean = true,
+    /** Keep the process resident with a foreground service, so returning from
+     *  another app resumes instead of cold-starting. Off by default: it costs a
+     *  permanent notification and resident memory, and most devices do not need
+     *  it. See KeepAliveService. */
+    val keepResident: Boolean = false,
 )
 
 const val LAYOUT_CAROUSEL = 0
