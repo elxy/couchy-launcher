@@ -20,7 +20,8 @@ class SectionsOfTest {
     private fun app(pkg: String, autoCategory: String = "streaming") = AppEntry(
         pkg = pkg,
         label = pkg,
-        art = null,
+        banner = null,
+        icon = null,
         autoCategory = autoCategory,
         tile = Color(0xFF37474F),
         stamp = 0L,

@@ -106,17 +106,6 @@ object Shelf {
 
     fun has(pkg: String) = pkg in sources
 
-    /**
-     * Drop every decoded still. Called when the system reports memory pressure:
-     * the pictures are decorative and all of them sit on disk (or one request
-     * away), so nothing here is worth a kill. The next shelf appearance simply
-     * re-reads from the disk cache.
-     */
-    fun trimMemory() {
-        images.evictAll()
-        synchronized(itemsCache) { itemsCache.clear() }
-    }
-
     /** True when this app's shelf items carry deep links (see [Item.play]). */
     fun interactive(pkg: String) = sources[pkg]?.interactive == true
 

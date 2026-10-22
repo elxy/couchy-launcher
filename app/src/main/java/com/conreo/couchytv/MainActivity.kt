@@ -1,7 +1,6 @@
 package com.conreo.couchytv
 
 import android.content.BroadcastReceiver
-import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -13,8 +12,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
-import com.conreo.couchytv.data.AppArtworkCache
-import com.conreo.couchytv.data.Shelf
 import com.conreo.couchytv.ui.LauncherApp
 import java.util.Locale
 
@@ -51,24 +48,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Decorative pictures are the first thing to give up when the box runs
-        // short: the app artwork and the Top Shelf stills are all on disk, so
-        // dropping them costs a re-decode, not a reload. Without this the
-        // launcher only ever grew (see AppArtworkCache / Shelf.trimMemory).
-        registerComponentCallbacks(object : ComponentCallbacks2 {
-            override fun onTrimMemory(level: Int) {
-                if (level < ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) return
-                AppArtworkCache.clear()
-                Shelf.trimMemory()
-            }
-
-            override fun onConfigurationChanged(newConfig: Configuration) = Unit
-            override fun onLowMemory() {
-                AppArtworkCache.clear()
-                Shelf.trimMemory()
-            }
-        })
 
         // A home screen never exits on Back
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
