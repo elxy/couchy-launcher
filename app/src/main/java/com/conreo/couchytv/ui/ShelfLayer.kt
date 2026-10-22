@@ -53,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.conreo.couchytv.R
@@ -117,6 +118,14 @@ class ShelfUi {
     fun exit() {
         active = false
     }
+
+    /**
+     * True while a still is actually drawn — the focus belongs to a shelf source
+     * and its first picture has arrived. The launcher reads it to let the
+     * expanded dock grid use that picture as its backdrop instead of the
+     * wallpaper, and to skip blurring the wallpaper underneath it.
+     */
+    var showing by mutableStateOf(false)
 }
 
 val LocalShelfFocus = staticCompositionLocalOf<ShelfFocus?> { null }
@@ -161,7 +170,16 @@ fun ShelfLayer(
     focus: ShelfFocus,
     anchor: ShelfAnchor,
     enabled: Boolean,
+    /** Full-screen takeover (move mode): the stills leave the screen entirely. */
     suppressed: Boolean,
+    /**
+     * The expanded dock grid. It covers the whole screen, so the stills stay —
+     * as its backdrop — instead of dropping back to the wallpaper, which used
+     * to flash a different picture the moment Down was pressed. Browse mode
+     * still ends: the grid owns the D-pad.
+     */
+    drawerOpen: Boolean,
+    captionSuppressed: Boolean,
     scrim: Brush?,
     mode: ShelfUi,
     caption: String?,
@@ -172,14 +190,19 @@ fun ShelfLayer(
     onUp: () -> Unit,
     onExitToDock: () -> Unit,
 ) {
-    val pkg = if (mode.active) mode.pkg else focus.pkg
-    val want = if (enabled && !suppressed && pkg != null && Shelf.has(pkg)) pkg else null
-
     var shownPkg by remember { mutableStateOf<String?>(null) }
     // Kept after [shownPkg] clears so the exit fade still has content to draw.
     var lastPkg by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(want, mode.active) {
+    val pkg = if (mode.active) mode.pkg else focus.pkg
+    val want = if (enabled && !suppressed && pkg != null && Shelf.has(pkg)) pkg else null
+
+    LaunchedEffect(want, mode.active, drawerOpen) {
+        // The expanded dock grid is opaque, and while it is up the focused
+        // package is gone (focus lives in the grid) — so the picture that was
+        // already on screen is FROZEN as its backdrop rather than dissolved
+        // back to the wallpaper and re-fetched on the way out.
+        if (drawerOpen) return@LaunchedEffect
         if (want == null) shownPkg = null
         else {
             // Entering browse mode happens on an already-visible shelf — no wait.
@@ -194,12 +217,12 @@ fun ShelfLayer(
     // hand focus back to the dock card once the overlay is gone (the browse box
     // taking focus with it would otherwise leave the launcher with none).
     var refocusAfterOverlay by remember { mutableStateOf(false) }
-    LaunchedEffect(enabled, suppressed) {
+    LaunchedEffect(enabled, suppressed, drawerOpen) {
         if (!enabled) {
             mode.exit()
             return@LaunchedEffect
         }
-        if (suppressed) {
+        if (suppressed || drawerOpen) {
             if (mode.active) {
                 mode.exit()
                 refocusAfterOverlay = true
@@ -241,6 +264,10 @@ fun ShelfLayer(
                 scrim = scrim,
                 anchor = anchor,
                 mode = mode,
+                // Behind the drawer only the picture remains: its text belongs
+                // to the dock band, which the grid covers.
+                showInfo = !drawerOpen,
+                drawerOpen = drawerOpen,
                 browseFocus = browseFocus,
                 onPlay = onPlay,
                 onUp = onUp,
@@ -251,9 +278,19 @@ fun ShelfLayer(
 
     // No shelf content (no source for this app, or its listing failed) → the
     // band above the dock carries the wallpaper's caption instead. The shelf
-    // text replaces it the moment there are stills to describe.
+    // text replaces it the moment there are stills to describe. [suppressed]
+    // (move mode) hides the stills and ends browsing, but the caption is the
+    // wallpaper's own description and lives in the empty band on the LEFT —
+    // the settings sheet and the app menu only cover the right edge, so the
+    // caption stays. The drawer keeps the stills, so this only matters when
+    // there is none. Only a full-screen takeover ([captionSuppressed]) hides it.
     val noShelf = shownPkg == null || (mode.itemsPkg == shownPkg && mode.items.isEmpty())
-    val captionText = if (!noShelf || suppressed) null else {
+    val shelfOn = !noShelf && !suppressed
+    // Published for the launcher (the dock grid uses the still as its backdrop
+    // and skips blurring the wallpaper underneath it). In a side effect, not in
+    // the composition body: the reader is an ancestor.
+    androidx.compose.runtime.SideEffect { if (mode.showing != shelfOn) mode.showing = shelfOn }
+    val captionText = if (!noShelf || captionSuppressed) null else {
         val timeline = timedCaption
         val clock = captionClock
         if (timeline.isNullOrEmpty() || clock == null) caption
@@ -271,14 +308,24 @@ fun ShelfLayer(
         Box(Modifier.fillMaxSize()) {
             Text(
                 text = captionText.orEmpty(),
-                style = MaterialTheme.typography.bodyMedium.copy(shadow = ShelfShadow),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontSize = 20.sp,
+                    lineHeight = 26.sp,
+                    shadow = ShelfShadow,
+                ),
                 color = Color.White.copy(alpha = 0.78f),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(start = anchor.start, end = 24.dp, bottom = anchor.bottom)
-                    .fillMaxWidth(0.62f),
+                    .padding(
+                        start = anchor.start,
+                        end = 24.dp,
+                        bottom = anchor.bottom + CaptionLift,
+                    )
+                    // Wider than the shelf text column: the larger type needs
+                    // the room to stay within two lines.
+                    .fillMaxWidth(0.72f),
             )
         }
     }
@@ -290,6 +337,8 @@ private fun ShelfContent(
     scrim: Brush?,
     anchor: ShelfAnchor,
     mode: ShelfUi,
+    showInfo: Boolean,
+    drawerOpen: Boolean,
     browseFocus: FocusRequester,
     onPlay: (Shelf.Item) -> Unit,
     onUp: () -> Unit,
@@ -326,9 +375,11 @@ private fun ShelfContent(
         items.getOrNull((index + 1) % items.size)?.let { Shelf.image(ctx, it) }
     }
 
-    // Rotate — but never underneath the user's fingers.
-    LaunchedEffect(items, browsing) {
-        if (browsing || items.size < 2) return@LaunchedEffect
+    // Rotate — but never underneath the user's fingers, and never while the
+    // expanded dock grid is open: the still is the grid's backdrop there, so
+    // swapping it every 8 s would flip the wallpaper behind an open drawer.
+    LaunchedEffect(items, browsing, drawerOpen) {
+        if (browsing || drawerOpen || items.size < 2) return@LaunchedEffect
         while (true) {
             delay(SHELF_SECONDS * 1000L)
             mode.index = (mode.index + 1) % items.size
@@ -346,6 +397,21 @@ private fun ShelfContent(
     }
 
     Box(Modifier.fillMaxSize()) {
+        // Behind the expanded dock grid the picture is a backdrop: a shade
+        // deeper than the grid's own (which used to sit over a blurred
+        // wallpaper) keeps the icons readable over a bright still.
+        val dim by animateFloatAsState(
+            if (drawerOpen) 0.45f else 0f,
+            animationSpec = tween(400),
+            label = "shelfDrawerDim",
+        )
+        // The title block belongs to the dock band, which the grid covers — it
+        // fades out with the panel instead of blinking off.
+        val infoAlpha by animateFloatAsState(
+            if (showInfo) 1f else 0f,
+            animationSpec = tween(200),
+            label = "shelfInfoAlpha",
+        )
         // The still crossfades under the dock. Nothing is drawn until the first
         // picture is ready, so a failed fetch leaves the wallpaper untouched.
         Crossfade(targetState = shown, animationSpec = tween(700), label = "shelfPic") { state ->
@@ -373,6 +439,9 @@ private fun ShelfContent(
                 // of under it — the shelf replaces the wallpaper, so it takes over
                 // its readability duty too.
                 if (scrim != null) Box(Modifier.fillMaxSize().background(scrim))
+                if (dim > 0.01f) {
+                    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = dim)))
+                }
             }
         }
 
@@ -409,29 +478,44 @@ private fun ShelfContent(
 
         Column(
             Modifier
+                // Faded out while the dock grid is open (see [showInfo]).
+                .graphicsLayer { alpha = infoAlpha }
                 .align(Alignment.BottomStart)
                 // Clear of the dock row + its 2nd-row peek, so the text sits in
                 // the empty band above the icons, like the Top Shelf on tvOS.
                 .padding(start = anchor.start, end = 24.dp, bottom = anchor.bottom)
-                .fillMaxWidth(0.62f),
+                // Wider than before: the larger source line needs the room to
+                // stay on one line.
+                .fillMaxWidth(0.72f),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Crossfade(targetState = shown?.first, animationSpec = tween(450), label = "shelfText") { item ->
                 if (item == null) {
                     Box(Modifier)
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        // Fixed sizes, not theme steps: tv-material's label scale
+                        // tops out at 14 sp, which vanishes on a TV. The source
+                        // line and the description line (14 → 22 sp) and the
+                        // title (24 → 32 sp) each jump two steps up that ladder;
+                        // the D-pad hint stays at 12 sp.
                         val source = Shelf.sourceLabel(pkg)
                         if (source != 0) {
                             Text(
                                 text = stringResource(source),
-                                style = MaterialTheme.typography.labelLarge.copy(shadow = ShelfShadow),
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontSize = 22.sp,
+                                    lineHeight = 28.sp,
+                                    shadow = ShelfShadow,
+                                ),
                                 color = Color.White.copy(alpha = 0.85f),
                             )
                         }
                         Text(
                             text = item.title,
                             style = MaterialTheme.typography.headlineSmall.copy(
+                                fontSize = 32.sp,
+                                lineHeight = 40.sp,
                                 fontWeight = FontWeight.Bold,
                                 shadow = ShelfShadow,
                             ),
@@ -441,7 +525,11 @@ private fun ShelfContent(
                         )
                         Text(
                             text = item.meta,
-                            style = MaterialTheme.typography.bodyMedium.copy(shadow = ShelfShadow),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 22.sp,
+                                lineHeight = 28.sp,
+                                shadow = ShelfShadow,
+                            ),
                             color = Color.White.copy(alpha = 0.85f),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -490,3 +578,8 @@ private val ShelfShadow = Shadow(
     offset = androidx.compose.ui.geometry.Offset(0f, 2f),
     blurRadius = 12f,
 )
+
+/** How far the wallpaper caption sits above the dock's text band — roughly one
+ *  line of its own type, so it reads as a separate row from the dock instead of
+ *  hugging the glass panel. */
+private val CaptionLift = 26.dp

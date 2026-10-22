@@ -223,12 +223,36 @@ fun LauncherApp(rescanTick: Int) {
     // DataStore config read, not serialized after it (scan takes no config).
     // Warm relaunches start from the in-memory cache (instant); a fresh scan
     // still runs to pick up changes. Not rendered until past the gates below.
+    //
+    // COLD start (process was killed in the background — routine on a 1.7GB TV)
+    // has an empty memoryCache, and waiting for the full scan behind a loading
+    // screen is ~2-4s of nothing. So the gates below first wait for the cheap
+    // on-disk snapshot of the previous scan (a few KB of JSON + file existence
+    // checks, ~tens of ms) and draw the grid from that; this full scan replaces
+    // it a moment later. The snapshot is ONLY used to skip that wait — the scan
+    // below always runs and always wins.
     val appsOrNull by produceState(initialValue = AppRepository.memoryCache, rescanTick) {
         value = withContext(Dispatchers.Default) { AppRepository.scan(context.applicationContext) }
+    }
+    var snapshotSeen by remember { mutableStateOf(AppRepository.memoryCache != null) }
+    var snapshot by remember { mutableStateOf<List<AppEntry>?>(null) }
+    LaunchedEffect(rescanTick) {
+        if (AppRepository.memoryCache != null) return@LaunchedEffect
+        snapshot = withContext(Dispatchers.IO) { AppRepository.loadSnapshot(context.applicationContext) }
+        snapshotSeen = true
     }
     val config = configOrNull ?: run {
         LoadingScreen()
         return
+    }
+
+    // Keep the resident-mode service in sync with the saved preference. This is
+    // the single owner of that service: the settings toggle writes the config,
+    // and this reacts. It also restores the service after the process is
+    // restarted (START_STICKY handles a kill without a task switch), and tears
+    // it down if the user switched the option off somewhere else.
+    LaunchedEffect(config.keepResident) {
+        com.conreo.couchytv.KeepAliveService.setEnabled(context, config.keepResident)
     }
 
     val uiScale = uiScaleFactor(
@@ -282,7 +306,7 @@ fun LauncherApp(rescanTick: Int) {
 
     // Hold the sober loading screen until the launcher can render COMPLETE —
     // every app scanned and every icon decoded.
-    val apps = appsOrNull ?: run {
+    val apps = appsOrNull ?: snapshot?.takeIf { snapshotSeen } ?: run {
         LoadingScreen()
         return
     }
@@ -678,6 +702,10 @@ fun LauncherApp(rescanTick: Int) {
     val shelfFocus = remember { ShelfFocus() }
     // Browsing state shared by dock (enters), shelf (renders) and status bar.
     val shelfUi = remember { ShelfUi() }
+    // Whether a Top Shelf still is on screen (published by ShelfLayer). While it
+    // is, the still IS the backdrop — blurring the wallpaper underneath would be
+    // wasted work and would also paint over the picture.
+    val shelfBackdrop = shelfUi.showing
     // Focus targets for the three stops of the shelf's D-pad path.
     val shelfBrowseFocus = remember { FocusRequester() }
     val shelfCardFocus = remember { FocusRequester() }
@@ -771,26 +799,34 @@ fun LauncherApp(rescanTick: Int) {
             }
             // Dock-expanded overlay: cheap pseudo-blur (tiny bitmap upscaled)
             // + dim, crossfaded. Works identically on every Android version.
+            // Blurring the wallpaper is pointless when a Top Shelf still is on
+            // screen — the still is the backdrop (see ShelfLayer), and drawing
+            // this on top of the wallpaper alone would also cover it.
             val overlayAlpha by animateFloatAsState(
                 targetValue = if (dockExpanded) 1f else 0f,
                 animationSpec = tween(1000),
                 label = "dockOverlay",
             )
             if (overlayAlpha > 0.01f) {
-                if (wallpaperBlurred != null) {
-                    Image(
-                        bitmap = wallpaperBlurred,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize().graphicsLayer { alpha = overlayAlpha },
+                // A still on screen dims itself (ShelfContent) and doubles as the
+                // backdrop, so the wallpaper copy and its shade would only paint
+                // over it — and dim it twice.
+                if (!shelfBackdrop) {
+                    if (wallpaperBlurred != null) {
+                        Image(
+                            bitmap = wallpaperBlurred,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize().graphicsLayer { alpha = overlayAlpha },
+                        )
+                    }
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .graphicsLayer { alpha = overlayAlpha }
+                            .background(Color.Black.copy(alpha = 0.45f))
                     )
                 }
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .graphicsLayer { alpha = overlayAlpha }
-                        .background(Color.Black.copy(alpha = 0.45f))
-                )
             }
             when (config.scrimMode) {
                 4 -> {} // off
@@ -810,7 +846,15 @@ fun LauncherApp(rescanTick: Int) {
                 enabled = shelfEnabled,
                 // The expanded dock grid, move mode and the overlay dialogs own
                 // the screen — no point fetching or animating pictures behind them.
-                suppressed = dockExpanded || movePkg != null || showSettings || menuFor != null,
+                suppressed = movePkg != null || showSettings || menuFor != null,
+                // The expanded grid keeps the still on screen and uses it as its
+                // backdrop: Down then reads as "the same picture, the grid rising
+                // over it" instead of the wallpaper flashing back.
+                drawerOpen = dockExpanded,
+                // The wallpaper caption only yields to a FULL-screen takeover. The
+                // settings sheet (right drawer) and the app menu (small dialog) sit
+                // on the right edge; the caption sits bottom-left, so it stays put.
+                captionSuppressed = dockExpanded || movePkg != null,
                 scrim = when (config.scrimMode) {
                     4 -> null
                     3 -> ScrimFull
@@ -1382,6 +1426,9 @@ private fun DockArea(
                     shelfCardFocus = shelfCardFocus,
                     onShelfUp = onShelfUp,
                     onExpandFrom = { i -> expandFromCol = i; onExpandChange(true) },
+                    // Column to hand focus back to when the grid closes: Up returns
+                    // to the dock icon you came from, not always the first one.
+                    focusCol = expandFromCol,
                     onLaunch = onLaunch,
                     onMenu = onMenu,
                 )
@@ -1438,12 +1485,24 @@ private fun DockArea(
                                         accent = accent,
                                         cardWidth = cardWidth,
                                         showLabel = config.showAppLabels,
-                                        // No Up handler: Up from row 0 falls through to
-                                        // the status bar. The grid closes with Back.
+                                        // Up on row 0 collapses the grid back into the
+                                        // dock (focus returns to the same column), so
+                                        // getting out of the drawer is the mirror of
+                                        // getting in. Rows below still move normally;
+                                        // Back closes the grid from anywhere.
                                         modifier = when {
                                             moving -> Modifier.focusRequester(moveFocus)
                                             r == targetRow && c == targetCol -> Modifier.focusRequester(gridFocus)
                                             else -> Modifier
+                                        }.onPreviewKeyEvent { e ->
+                                            if (movePkg != null || e.type != KeyEventType.KeyDown ||
+                                                e.key != Key.DirectionUp || r != 0
+                                            ) {
+                                                return@onPreviewKeyEvent false
+                                            }
+                                            expandFromCol = c
+                                            onExpandChange(false)
+                                            true
                                         },
                                         onLaunch = { onLaunch(app) },
                                         onLongPress = { onMenu(app) },
@@ -1482,6 +1541,7 @@ private fun DockGlassPanel(
     shelfCardFocus: FocusRequester,
     onShelfUp: (AppEntry) -> Boolean,
     onExpandFrom: (Int) -> Unit,
+    focusCol: Int,
     onLaunch: (AppEntry) -> Unit,
     onMenu: (AppEntry) -> Unit,
 ) {
@@ -1540,10 +1600,11 @@ private fun DockGlassPanel(
                         cardWidth = cardWidth,
                         showLabel = config.showAppLabels,
                         modifier = Modifier
-                            // Two requesters can share a node; the first card keeps
-                            // dockFocus for the launch entrance, and the app whose
-                            // shelf is open also gets shelfCardFocus for Down.
-                            .let { if (i == 0) it.focusRequester(dockFocus) else it }
+                            // Two requesters can share a node; the card at
+                            // [focusCol] keeps dockFocus for the launch entrance and
+                            // for returning from the grid, and the app whose shelf is
+                            // open also gets shelfCardFocus for Down.
+                            .let { if (i == focusCol) it.focusRequester(dockFocus) else it }
                             .let {
                                 if (app.pkg == shelfUi.pkg) it.focusRequester(shelfCardFocus) else it
                             }
@@ -1584,9 +1645,10 @@ private fun PeekStrip(app: AppEntry, cardWidth: Dp, cardHeight: Dp, peekH: Dp) {
             .clip(RoundedCornerShape(topStart = corner, topEnd = corner))
             .background(app.tile),
     ) {
-        if (app.banner != null) {
+        val banner = appBanner(app)
+        if (banner != null) {
             Image(
-                bitmap = app.banner,
+                bitmap = banner,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 alignment = Alignment.TopCenter,
