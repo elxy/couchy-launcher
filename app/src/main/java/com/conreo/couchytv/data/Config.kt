@@ -88,7 +88,18 @@ const val LAYOUT_GRID = 1
 const val LAYOUT_DOCK = 2
 
 /** Status bar date formats (SimpleDateFormat patterns); index 0 = off. */
-val DATE_FORMATS = listOf("", "EEE d", "EEE d MMM", "d MMM yyyy", "dd/MM", "MM/dd", "yyyy-MM-dd")
+val DATE_FORMATS = listOf(
+    "",
+    // ISO first: all digits, so the date and the clock share one font, one baseline and one
+    // weight. A localized month ("10月") pulls in a CJK fallback face whose taller glyphs push
+    // the date off the clock's baseline — visible at 10 ft as "the date sits lower".
+    "yyyy-MM-dd",
+    "EEE d MMM",
+    "d MMM yyyy",
+    "dd/MM",
+    "MM/dd",
+    "EEE d",
+)
 
 /** Sorted by user base — the display name is localized in the UI via string resource. */
 val LANGUAGES = listOf(

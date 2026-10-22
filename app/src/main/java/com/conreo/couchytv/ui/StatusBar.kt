@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,6 +42,9 @@ internal val STATUS_CHIP_HEIGHT = 48.dp
 /** Vertical padding of the bar, inside [STATUS_BAR_HEIGHT]. */
 internal val STATUS_BAR_PAD_V = 16.dp
 
+/** Distance from the screen edge to the bar's contents, left and right. */
+internal val STATUS_BAR_MARGIN_H = 40.dp
+
 /** Height of the status bar — what the collapsed strip expands to. */
 internal val STATUS_BAR_HEIGHT = STATUS_CHIP_HEIGHT + STATUS_BAR_PAD_V * 2
 
@@ -57,86 +61,107 @@ fun StatusBar(
     onVpnClick: () -> Unit,
     onNetworkClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    /** Where Up-from-the-shelf lands: the network icon, i.e. the left end of the
-     *  button cluster. Null in contexts that never focus the bar. */
+    /** Where Up-from-the-shelf lands: the network icon, the left end of the button
+     *  cluster in the top-right corner. Null in contexts that never focus the bar. */
     focusRequester: FocusRequester? = null,
 ) {
-    // Optional glass panel behind the icon cluster — same look as the dock
-    // panel, corners follow the roundness setting.
-    val cluster = if (glass) {
+    // Optional glass panel behind the BUTTON cluster only — same look as the dock
+    // panel, corners follow the roundness setting. The date and the clock sit on the
+    // opposite corner with no panel at all: two glass rectangles on one 80 dp line read
+    // as a toolbar, and the launcher already dims the top band of the wallpaper.
+    val iconPanel = if (glass) {
         Modifier
             .clip(SmoothCornerShape(LocalCornerRadius.current))
             .background(Color(0xB3121418))
             .background(Color.White.copy(alpha = 0.06f))
             .padding(horizontal = 12.dp, vertical = 4.dp)
     } else Modifier
+    // One style for both texts, remembered: `.copy()` allocates, and this line re-reads it
+    // on every clock tick.
+    //
+    // titleLarge (22 sp) rather than the titleMedium (18 sp) this used to be. It is the size
+    // that balances the button chip: the icons are 22 dp glyphs in 40 dp targets, so 18 sp
+    // digits read as a caption next to them. Tabular figures stay — the clock must not
+    // jitter as its digits change.
+    val typography = MaterialTheme.typography
+    val barTextStyle = remember(typography) {
+        typography.titleLarge.copy(fontFeatureSettings = "tnum")
+    }
+    // Built once: a fresh Modifier chain is never equal to the previous one, so an inline
+    // one would defeat the skip of the icon it is handed to.
+    val networkModifier = remember(focusRequester) {
+        if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 40.dp, vertical = STATUS_BAR_PAD_V),
-        horizontalArrangement = Arrangement.End,
+            .padding(horizontal = STATUS_BAR_MARGIN_H, vertical = STATUS_BAR_PAD_V),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-      Row(
-        // weight(fill = false): the cluster yields width instead of being squeezed.
-        // Without it, a date and a clock that together exceed the bar crush this row
-        // and the CLOCK wraps onto two lines ("10:" / "57") — it did exactly that.
-        modifier = cluster.weight(1f, fill = false),
-        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        // Order: VPN · network · settings · date · clock (clock far right)
-        if (showVpn) {
-            StatusIcon(
-                icon = AppIcons.Vpn,
-                active = net.vpn,
-                contentDescription = stringResource(R.string.cd_vpn),
-                onClick = onVpnClick,
-            )
-        }
-        StatusIcon(
-            icon = when {
-                net.ethernet -> AppIcons.Ethernet
-                net.wifi -> AppIcons.Wifi
-                else -> AppIcons.WifiOff
-            },
-            active = net.connected,
-            contentDescription = stringResource(R.string.cd_network),
-            onClick = onNetworkClick,
-            modifier = if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier,
-        )
-        StatusIcon(
-            icon = AppIcons.Gear,
-            active = true,
-            contentDescription = stringResource(R.string.cd_settings),
-            onClick = onSettingsClick,
-        )
-        if (date.isNotEmpty()) {
+        // ----- left: date · clock, on the wallpaper, no panel -----
+        Row(
+            // weight(fill = false): the text yields the width the buttons need rather than
+            // pushing them off the edge. Inside, the date gives up room before the clock does.
+            modifier = Modifier.weight(1f, fill = false),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (date.isNotEmpty()) {
+                Text(
+                    text = date,
+                    style = barTextStyle,
+                    // Same weight as the clock: they are one line, separated by the gap.
+                    color = Color.White,
+                    // The date is the first thing to give up room: one line, tail ellipsis.
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+            }
             Text(
-                text = date,
-                style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-                color = Color.White.copy(alpha = 0.75f),
-                // The date is the first thing to give up room: one line, tail
-                // ellipsis, and it absorbs the squeeze. Without the weight the
-                // CLOCK gets clipped or wrapped instead.
+                // Tabular figures: digits keep a fixed width so the clock never jitters.
+                text = time,
+                style = barTextStyle,
+                color = Color.White,
+                // Never wrap and never clip: wrapping split the clock into "10:" / "57".
                 maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .padding(start = 10.dp)
-                    .weight(1f, fill = false),
+                softWrap = false,
             )
         }
-        Text(
-            // Tabular figures: digits keep a fixed width so the clock never jitters.
-            text = time,
-            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
-            color = Color.White,
-            // Never wrap and never clip: wrapping split the clock into "10:" / "57".
-            maxLines = 1,
-            softWrap = false,
-            modifier = Modifier.padding(start = 10.dp),
-        )
-      }
+
+        // ----- right: VPN · network · settings, on the glass chip -----
+        Row(
+            modifier = iconPanel,
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (showVpn) {
+                StatusIcon(
+                    icon = AppIcons.Vpn,
+                    active = net.vpn,
+                    contentDescription = stringResource(R.string.cd_vpn),
+                    onClick = onVpnClick,
+                )
+            }
+            StatusIcon(
+                icon = when {
+                    net.ethernet -> AppIcons.Ethernet
+                    net.wifi -> AppIcons.Wifi
+                    else -> AppIcons.WifiOff
+                },
+                active = net.connected,
+                contentDescription = stringResource(R.string.cd_network),
+                onClick = onNetworkClick,
+                modifier = networkModifier,
+            )
+            StatusIcon(
+                icon = AppIcons.Gear,
+                active = true,
+                contentDescription = stringResource(R.string.cd_settings),
+                onClick = onSettingsClick,
+            )
+        }
     }
 }
 
