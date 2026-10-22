@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Sober splash: plain dark backdrop, drawn by the system the instant the
-     app starts. The in-app loading spinner takes over from here. -->
+<!-- Splash for API 21/22. Plain dark backdrop only: `android:width`,
+     `android:height` and `android:gravity` on a <layer-list> item need API 23,
+     and on 21/22 the couch would be stretched to fill the whole screen.
+     The in-app LoadingScreen (couch + breathing) takes over from here. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/splash_bg" />
 </layer-list>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Splash for API 23+: drawn by the system the instant the app starts, i.e.
+     before any Kotlin or Compose code runs. It must look like LoadingScreen() —
+     same background colour, same couch at its 88dp size — so the handover from
+     this window background to the first Compose frame is invisible instead of a
+     plain dark rectangle abruptly gaining a logo.
+
+     88dp is the largest size LoadingScreen uses; smaller here would pop bigger
+     once Compose takes over. Gravity is centered like its Box. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/splash_bg" />
+    <item
+        android:width="88dp"
+        android:height="88dp"
+        android:gravity="center"
+        android:drawable="@drawable/ic_couch" />
+</layer-list>
