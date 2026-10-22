@@ -179,4 +179,13 @@
     <string name="cd_move_down">아래로 이동</string>
     <string name="cd_delete_section">섹션 삭제</string>
     <string name="about_source">소스 코드</string>
+
+    <!-- Top Shelf: streaming app content above the dock -->
+    <string name="shelf_label">톱 셸프</string>
+    <string name="shelf_sub">선택한 앱의 인기 동영상을 독 위에 표시합니다(빌리빌리, iQIYI, 텐센트 비디오, 유쿠, 도우위). 각 서비스의 공개 웹 API에서 가져옵니다.</string>
+    <string name="shelf_bilibili">빌리빌리 · 인기</string>
+    <string name="shelf_douyu">도우위 · 라이브</string>
+    <string name="shelf_iqiyi">iQIYI · 인기</string>
+    <string name="shelf_tencent">텐센트 비디오 · 인기</string>
+    <string name="shelf_youku">유쿠 · 인기</string>
 </resources>

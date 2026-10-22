@@ -64,6 +64,14 @@ object AppRepository {
         "com.limelight" to "games",
         "com.nvidia.geforcenow" to "games",
         "com.retroarch" to "games",
+        // Chinese streaming apps: these also feed the Top Shelf (see data/Shelf.kt).
+        "com.xiaodianshi.tv.yst" to "streaming", // 云视听小电视 (Bilibili TV)
+        "tv.danmaku.bilibilihd" to "streaming", // 哔哩哔哩 HD
+        "com.douyu.xl.douyutv" to "streaming", // 斗鱼
+        "com.gitvdemo.video" to "streaming", // 银河奇异果 (iQIYI TV)
+        "com.ktcp.video" to "streaming", // 云视听极光 (Tencent Video TV)
+        "com.cibn.tv" to "streaming", // CIBN酷喵 (Youku TV)
+        "com.newtv.cboxtv" to "streaming", // 央视频TV版
     )
 
     /** Last successful scan — lets a relaunched activity render instantly. */

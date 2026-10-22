@@ -522,6 +522,17 @@ private fun DisplayScreen(
                 headlineContent = { Text(stringResource(R.string.section_names_label)) },
                 trailingContent = { CheckMark(checked = config.showCategoryNames) },
             )
+        } else {
+            // The Top Shelf only exists behind the dock — same slot as above, so
+            // the two mutually exclusive options share the "Elements" label.
+            SectionLabel(stringResource(R.string.section_elements))
+            SettingsItem(
+                selected = false,
+                onClick = { update { it.copy(shelfEnabled = !it.shelfEnabled) } },
+                headlineContent = { Text(stringResource(R.string.shelf_label)) },
+                supportingContent = { Text(stringResource(R.string.shelf_sub)) },
+                trailingContent = { CheckMark(checked = config.shelfEnabled) },
+            )
         }
         SectionLabel(stringResource(R.string.section_size))
         run {

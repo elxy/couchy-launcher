@@ -26,7 +26,7 @@ https://github.com/user-attachments/assets/6f21913e-1948-4543-9983-64dc68c602fa
 
 </div>
 
-One screen, remote-driven, for 1080p and 4K TVs. No network requests out of the box — the wallpaper is a local gradient and settings live in a single file on the device.
+One screen, remote-driven, for 1080p and 4K TVs. Nothing leaves the TV unless you turn it on — the wallpaper is a local gradient and settings live in a single file on the device.
 
 | Live aerial wallpaper | Settings | First-run wizard |
 |:---:|:---:|:---:|
@@ -39,6 +39,7 @@ One screen, remote-driven, for 1080p and 4K TVs. No network requests out of the 
 - **Three layouts** — Carousel, Grid, or a floating glass Dock (press **Down** to expand to the full grid).
 - **Sections** you rename, reorder and fill; an app can appear in several. New installs go to the first section.
 - **Wallpapers** — gradients, your own photo, a looping video, or optional built-in aerial videos (Apple / Amazon / community, streamed only when enabled), with speed control and cross-fades.
+- **Top Shelf** — while a streaming app is focused in the dock, its hot titles fill the screen above the icons: **Bilibili** (popular videos), **Douyu** (live rooms), **iQIYI**, **Tencent Video** and **Youku**. Each service is asked for its largest published still — up to 2560×1440 for iQIYI, 1920×1080 for Bilibili/Youku — so it still looks sharp on a 4K panel. From their public web APIs; switch it off in Settings › Display › Top Shelf.
 - **Save & load** your full configuration — categories, layout, wallpaper, and all settings — as a JSON file.
 - **18 languages** with a dedicated language picker in Launcher settings.
 - **Adjustable** icon size, spacing, corner roundness, interface scale, dimming, and an optional glass status-bar panel.
@@ -52,6 +53,12 @@ One screen, remote-driven, for 1080p and 4K TVs. No network requests out of the 
 ## ⚠️ Aerial wallpaper notice
 
 The built-in aerial video wallpapers are **opt-in and off by default**. When enabled, they stream public video files from **Apple** and **Amazon** CDNs — these are non-free, third-party services. No credentials or private data are sent, but the network traffic goes to proprietary infrastructure. If you want a fully libre setup, use the gradient, photo, or local video wallpaper options instead.
+
+---
+
+## ⚠️ Top Shelf notice
+
+The Top Shelf is **on by default** and only ever reads public listing pages: Bilibili's popular-videos JSON, Douyu's live-room JSON, iQIYI's recommendation rail, Tencent Video's channel page and Youku's home page. The TV fetches them directly — no account, no cookies, no playback history, nothing uploaded. It fires only while one of those apps is focused, and each result is cached for 15 minutes. Turn it off in **Settings › Display › Top Shelf** for a fully offline launcher.
 
 ---
 
@@ -122,7 +129,7 @@ The built-in setup wizard walks through this with your TV's IP pre-filled. No co
 
 ## Privacy
 
-No ads, analytics, accounts or background services. The only network use is optional aerial-video streaming, off by default. Sections, ordering, hidden apps and wallpaper stay in one local file.
+No ads, analytics, accounts or background services. Network use is limited to what you switch on: aerial video streaming (off by default) and the Top Shelf's video-service listings (on by default). Sections, ordering, hidden apps and wallpaper stay in one local file.
 
 ## Changelog
 
@@ -202,7 +209,7 @@ https://github.com/user-attachments/assets/6f21913e-1948-4543-9983-64dc68c602fa
 
 </div>
 
-单屏、遥控器操作，支持 1080p 与 4K 电视。开箱不联网——壁纸是本地渐变，设置存在设备上的单个文件里。
+单屏、遥控器操作，支持 1080p 与 4K 电视。不主动联网——壁纸是本地渐变，设置存在设备上的单个文件里。
 
 | 航拍视频壁纸 | 设置 | 首次设置向导 |
 |:---:|:---:|:---:|
@@ -215,6 +222,7 @@ https://github.com/user-attachments/assets/6f21913e-1948-4543-9983-64dc68c602fa
 - **三种布局**——轮播、网格，或悬浮玻璃底栏 Dock（按「下」展开为完整网格）。
 - **分区**可自行重命名、排序、填充；一个应用可归入多个分区。新安装的应用进入第一个分区。
 - **壁纸**——渐变、你自己的照片、循环视频，或可选的内置航拍视频（Apple / Amazon / 社区，仅在开启时才联网），带速度控制与淡入淡出。
+- **顶部内容（Top Shelf）**——选中 Dock 里的视频应用时，上半屏轮播它的热门剧照：**哔哩哔哩**（热门视频）、**斗鱼**（正在直播）、**爱奇艺**、**腾讯视频**、**优酷**。每个服务都取它发布的最高清版本（爱奇艺最高 2560×1440，哔哩哔哩 / 优酷 1920×1080），4K 电视上依然清晰。内容来自各服务的公开网页接口，可在「设置 → 显示 → 顶部内容」关闭。
 - **可调**图标大小、间距、圆角、界面缩放、暗化，以及可选的玻璃状态栏面板。
 - **保存与加载**完整配置——分类、布局、壁纸及所有设置导出为 JSON 文件。
 - **18 种语言**（另加英文），在启动器设置中可选择语言。
@@ -225,6 +233,12 @@ https://github.com/user-attachments/assets/6f21913e-1948-4543-9983-64dc68c602fa
 ## ⚠️ 航拍壁纸说明
 
 内置航拍视频壁纸是**可选功能，默认关闭**。启用后，会从 **Apple** 和 **Amazon** CDN 串流公共视频文件——这些是非自由的第三方服务。不会发送任何凭据或隐私数据，但网络流量会经过专有基础设施。如需完全自由的配置，请使用渐变、照片或本地视频壁纸。
+
+---
+
+## ⚠️ 顶部内容说明
+
+顶部内容是**默认开启**的，但只读取公开的列表页面：哔哩哔哩的热门视频 JSON、斗鱼的直播间 JSON、爱奇艺的推荐流、腾讯视频的频道页、优酷的首页。由电视直接请求，不带账号、不带 Cookie、不上传播放记录；只在对应应用被选中时发起，结果缓存 15 分钟。希望启动器完全离线，可在 **设置 → 显示 → 顶部内容** 关闭。
 
 ---
 
@@ -295,7 +309,7 @@ adb shell pm disable-user --user 0 com.google.android.tungsten.setupwraith   # �
 
 ## 隐私
 
-无广告、分析、账户或后台服务。唯一的联网是可选的航拍视频播放，默认关闭。分区、排序、隐藏应用与壁纸都存在一个本地文件中。
+无广告、分析、账户或后台服务。联网仅限你主动开启的部分：航拍视频播放（默认关闭）与顶部内容的视频站点列表（默认开启）。分区、排序、隐藏应用与壁纸都存在一个本地文件中。
 
 ## 许可证
 

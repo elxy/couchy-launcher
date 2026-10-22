@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
@@ -59,6 +60,10 @@ fun AppCard(
     // would eat the next legitimate press, since the release is delivered to
     // the menu's window and never comes back to this card).
     val cardShape = SmoothCornerShape(LocalCornerRadius.current)
+    // Report focus to the Top Shelf (dock only): the focused app's content takes
+    // over the wallpaper. Writing to the holder's state does not recompose this
+    // card or the grid — only the shelf reads it.
+    val shelfFocus = LocalShelfFocus.current
     var downAt by remember { mutableLongStateOf(0L) }
     var lastKeyDown by remember { mutableLongStateOf(0L) }
     var longPressAt by remember { mutableLongStateOf(0L) }
@@ -77,6 +82,7 @@ fun AppCard(
         },
         onLongClick = { fireLongPress() }, // pointer / mouse path
         modifier = modifier
+            .onFocusChanged { if (it.isFocused) shelfFocus?.pkg = app.pkg }
             .onPreviewKeyEvent { e ->
                 val select = e.key == Key.DirectionCenter || e.key == Key.Enter ||
                     e.key == Key.NumPadEnter

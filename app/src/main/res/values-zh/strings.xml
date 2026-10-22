@@ -193,4 +193,13 @@
     <string name="cd_move_down">下移</string>
     <string name="cd_delete_section">删除分区</string>
     <string name="about_source">源代码</string>
+
+    <!-- Top Shelf: streaming app content above the dock -->
+    <string name="shelf_label">顶部内容</string>
+    <string name="shelf_sub">选中哔哩哔哩、爱奇艺、腾讯视频、优酷或斗鱼时，在 Dock 上方轮播其热门内容（来自各服务的公开网页接口）。</string>
+    <string name="shelf_bilibili">哔哩哔哩 · 热门</string>
+    <string name="shelf_douyu">斗鱼 · 正在直播</string>
+    <string name="shelf_iqiyi">爱奇艺 · 热门</string>
+    <string name="shelf_tencent">腾讯视频 · 热播</string>
+    <string name="shelf_youku">优酷 · 热门</string>
 </resources>

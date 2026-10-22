@@ -179,4 +179,13 @@
     <string name="cd_move_down">تحريك لأسفل</string>
     <string name="cd_delete_section">حذف القسم</string>
     <string name="about_source">الكود المصدري</string>
+
+    <!-- Top Shelf: streaming app content above the dock -->
+    <string name="shelf_label">Top Shelf</string>
+    <string name="shelf_sub">يعرض مقاطع التطبيق المحدد الشائعة فوق الشريط (Bilibili وiQIYI وTencent Video وYouku وDouyu). المحتوى من واجهات الويب العامة.</string>
+    <string name="shelf_bilibili">Bilibili · الشائع</string>
+    <string name="shelf_douyu">Douyu · مباشر</string>
+    <string name="shelf_iqiyi">iQIYI · الشائع</string>
+    <string name="shelf_tencent">Tencent Video · الشائع</string>
+    <string name="shelf_youku">Youku · الشائع</string>
 </resources>

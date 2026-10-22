@@ -179,4 +179,13 @@
     <string name="cd_move_down">Aşağı taşı</string>
     <string name="cd_delete_section">Bölümü sil</string>
     <string name="about_source">Kaynak kodu</string>
+
+    <!-- Top Shelf: streaming app content above the dock -->
+    <string name="shelf_label">Top Shelf</string>
+    <string name="shelf_sub">Seçili uygulamanın popüler videolarını dock üzerinde gösterir (Bilibili, iQIYI, Tencent Video, Youku, Douyu). Genel web API\'lerini kullanır.</string>
+    <string name="shelf_bilibili">Bilibili · Popüler</string>
+    <string name="shelf_douyu">Douyu · Canlı</string>
+    <string name="shelf_iqiyi">iQIYI · Popüler</string>
+    <string name="shelf_tencent">Tencent Video · Popüler</string>
+    <string name="shelf_youku">Youku · Popüler</string>
 </resources>

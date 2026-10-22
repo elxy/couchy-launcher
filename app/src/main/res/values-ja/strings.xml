@@ -179,4 +179,13 @@
     <string name="cd_move_down">下へ移動</string>
     <string name="cd_delete_section">セクションを削除</string>
     <string name="about_source">ソースコード</string>
+
+    <!-- Top Shelf: streaming app content above the dock -->
+    <string name="shelf_label">トップシェルフ</string>
+    <string name="shelf_sub">選択中のアプリの人気動画をドックの上に表示します（ビリビリ、iQIYI、テンセントビデオ、優酷、斗魚）。各サービスの公開Web APIから取得します。</string>
+    <string name="shelf_bilibili">ビリビリ · 人気</string>
+    <string name="shelf_douyu">斗魚 · ライブ中</string>
+    <string name="shelf_iqiyi">iQIYI · 人気</string>
+    <string name="shelf_tencent">テンセントビデオ · 人気</string>
+    <string name="shelf_youku">優酷 · 人気</string>
 </resources>

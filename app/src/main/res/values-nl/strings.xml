@@ -179,4 +179,13 @@
     <string name="cd_move_down">Omlaag</string>
     <string name="cd_delete_section">Sectie verwijderen</string>
     <string name="about_source">Broncode</string>
+
+    <!-- Top Shelf: streaming app content above the dock -->
+    <string name="shelf_label">Top Shelf</string>
+    <string name="shelf_sub">Toont populaire video\'s van de geselecteerde app boven de dock (Bilibili, iQIYI, Tencent Video, Youku, Douyu). Gebruikt hun openbare web-API\'s.</string>
+    <string name="shelf_bilibili">Bilibili · Populair</string>
+    <string name="shelf_douyu">Douyu · Live</string>
+    <string name="shelf_iqiyi">iQIYI · Populair</string>
+    <string name="shelf_tencent">Tencent Video · Populair</string>
+    <string name="shelf_youku">Youku · Populair</string>
 </resources>

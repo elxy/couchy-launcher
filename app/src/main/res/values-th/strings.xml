@@ -179,4 +179,13 @@
     <string name="cd_move_down">เลื่อนลง</string>
     <string name="cd_delete_section">ลบส่วน</string>
     <string name="about_source">ซอร์สโค้ด</string>
+
+    <!-- Top Shelf: streaming app content above the dock -->
+    <string name="shelf_label">ท็อปเชลฟ์</string>
+    <string name="shelf_sub">แสดงวิดีโอยอดนิยมของแอปที่เลือกเหนือด็อก (Bilibili, iQIYI, Tencent Video, Youku, Douyu) ดึงข้อมูลจากเว็บ API สาธารณะ</string>
+    <string name="shelf_bilibili">Bilibili · ยอดนิยม</string>
+    <string name="shelf_douyu">Douyu · ไลฟ์สด</string>
+    <string name="shelf_iqiyi">iQIYI · ยอดนิยม</string>
+    <string name="shelf_tencent">Tencent Video · ยอดนิยม</string>
+    <string name="shelf_youku">Youku · ยอดนิยม</string>
 </resources>

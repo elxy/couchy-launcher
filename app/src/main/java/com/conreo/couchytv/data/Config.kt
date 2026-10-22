@@ -75,6 +75,10 @@ data class LauncherConfig(
     val language: String = "",
     /** 0 = carousel (fixed selection), 1 = grid, 2 = dock */
     val layout: Int = 2, // Dock
+    /** Top Shelf: while a streaming app (Bilibili, Douyu, iQIYI, Tencent Video,
+     *  Youku) is focused in the dock, show its hot titles above the icons
+     *  (fetches their public web pages — see data/Shelf.kt). */
+    val shelfEnabled: Boolean = true,
 )
 
 const val LAYOUT_CAROUSEL = 0

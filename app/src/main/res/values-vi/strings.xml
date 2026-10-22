@@ -179,4 +179,13 @@
     <string name="cd_move_down">Chuyển xuống</string>
     <string name="cd_delete_section">Xóa mục</string>
     <string name="about_source">Mã nguồn</string>
+
+    <!-- Top Shelf: streaming app content above the dock -->
+    <string name="shelf_label">Top Shelf</string>
+    <string name="shelf_sub">Hiển thị video nổi bật của ứng dụng đang chọn phía trên dock (Bilibili, iQIYI, Tencent Video, Youku, Douyu). Lấy từ API web công khai.</string>
+    <string name="shelf_bilibili">Bilibili · Nổi bật</string>
+    <string name="shelf_douyu">Douyu · Đang live</string>
+    <string name="shelf_iqiyi">iQIYI · Nổi bật</string>
+    <string name="shelf_tencent">Tencent Video · Nổi bật</string>
+    <string name="shelf_youku">Youku · Nổi bật</string>
 </resources>

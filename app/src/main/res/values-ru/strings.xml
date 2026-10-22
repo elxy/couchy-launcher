@@ -179,4 +179,13 @@
     <string name="cd_move_down">Вниз</string>
     <string name="cd_delete_section">Удалить раздел</string>
     <string name="about_source">Исходный код</string>
+
+    <!-- Top Shelf: streaming app content above the dock -->
+    <string name="shelf_label">Top Shelf</string>
+    <string name="shelf_sub">Показывает популярные видео выбранного приложения над доком (Bilibili, iQIYI, Tencent Video, Youku, Douyu). Данные из открытых веб-API.</string>
+    <string name="shelf_bilibili">Bilibili · Популярное</string>
+    <string name="shelf_douyu">Douyu · В эфире</string>
+    <string name="shelf_iqiyi">iQIYI · Популярное</string>
+    <string name="shelf_tencent">Tencent Video · Популярное</string>
+    <string name="shelf_youku">Youku · Популярное</string>
 </resources>

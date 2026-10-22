@@ -67,6 +67,8 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
@@ -368,6 +370,10 @@ fun LauncherApp(rescanTick: Int) {
     val gridCols = fitRow(screenW - 88.dp, cardWidth, gap).first
     val dockCols = fitRow(screenW - 116.dp, cardWidth, gap).first
 
+    // The dock reports its own glass-panel geometry here; the Top Shelf text
+    // column hangs off it (see ShelfAnchor).
+    val shelfAnchor = remember { ShelfAnchor() }
+
     var dockExpanded by remember { mutableStateOf(false) }
     LaunchedEffect(config.layout) { if (config.layout != LAYOUT_DOCK) dockExpanded = false }
 
@@ -573,9 +579,17 @@ fun LauncherApp(rescanTick: Int) {
     }
 
     val corner: Dp = CORNER_RADII[config.cornerRadius.coerceIn(0, CORNER_RADII.size - 1)]
+    // Top Shelf state: which dock app is focused (written by AppCard) + whether
+    // the shelf is enabled at all. Held in a stable holder so focus moves never
+    // recompose this whole screen.
+    val shelfFocus = remember { ShelfFocus() }
+    val shelfEnabled = config.shelfEnabled && config.layout == LAYOUT_DOCK
     Box(Modifier.fillMaxSize()) {
     ScaledUi(uiScale) {
-    androidx.compose.runtime.CompositionLocalProvider(LocalCornerRadius provides corner) {
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalCornerRadius provides corner,
+        LocalShelfFocus provides shelfFocus,
+    ) {
     LiteTvTheme(accent = accent) {
         Box(
             Modifier
@@ -668,6 +682,26 @@ fun LauncherApp(rescanTick: Int) {
                 else -> Box(Modifier.fillMaxSize().background(ScrimTopBottom))
             }
 
+            // Top Shelf: the focused dock app's stills replace the wallpaper while
+            // it is focused (streaming apps, public web pages; see Settings). Drawn
+            // ABOVE the scrim because the picture brings its own: the info text
+            // below must stay crisp, and the shelf image must not be double-dimmed.
+            ShelfLayer(
+                focus = shelfFocus,
+                anchor = shelfAnchor,
+                enabled = shelfEnabled,
+                // The expanded dock grid, move mode and the overlay dialogs own
+                // the screen — no point fetching or animating pictures behind them.
+                suppressed = dockExpanded || movePkg != null || showSettings || menuFor != null,
+                scrim = when (config.scrimMode) {
+                    4 -> null
+                    3 -> ScrimFull
+                    2 -> ScrimBottom
+                    1 -> ScrimTop
+                    else -> ScrimTopBottom
+                },
+            )
+
             // Launch entrance: after the boot logo, wait a beat, then the glass
             // panels slide in (status bar from the top, dock from the bottom) and
             // the icons fade in after.
@@ -727,6 +761,7 @@ fun LauncherApp(rescanTick: Int) {
                         moveFocus = moveFocus,
                         cardWidth = cardWidth,
                         gap = gap,
+                        shelfAnchor = shelfAnchor,
                         intro = introShown,
                         expanded = dockExpanded,
                         onExpandChange = { dockExpanded = it },
@@ -1059,6 +1094,7 @@ private fun DockArea(
     moveFocus: FocusRequester,
     cardWidth: Dp,
     gap: Dp,
+    shelfAnchor: ShelfAnchor,
     intro: Boolean,
     expanded: Boolean,
     onExpandChange: (Boolean) -> Unit,
@@ -1067,6 +1103,9 @@ private fun DockArea(
 ) {
     val dockFocus = remember { FocusRequester() }
     val gridFocus = remember { FocusRequester() }
+    // Focus left the dock entirely (up to the status bar) → the Top Shelf has
+    // nothing focused to show and fades away.
+    val shelfFocus = LocalShelfFocus.current
     // Back closes the open grid (returns to the dock); when closed it falls
     // through to the activity's no-op, so Back never exits the home screen.
     androidx.activity.compose.BackHandler(enabled = expanded) { onExpandChange(false) }
@@ -1088,7 +1127,9 @@ private fun DockArea(
     // Size + spacing define how many icons the dock holds; the SAME count
     // becomes the grid's columns when unfolded, and both states are centered
     // with the same column math — so icons never shift horizontally.
-    BoxWithConstraints(modifier) {
+    BoxWithConstraints(
+        modifier.onFocusChanged { if (!it.hasFocus) shelfFocus?.pkg = null },
+    ) {
         val panelInnerPadding = 18.dp
         val available = maxWidth - 80.dp - panelInnerPadding * 2
         val (cols, gapUsed) = fitRow(available, cardWidth, gap)
@@ -1137,6 +1178,7 @@ private fun DockArea(
                     cardWidth = cardWidth,
                     gapUsed = gapUsed,
                     innerPadding = panelInnerPadding,
+                    shelfAnchor = shelfAnchor,
                     onExpandFrom = { i -> expandFromCol = i; onExpandChange(true) },
                     onLaunch = onLaunch,
                     onMenu = onMenu,
@@ -1233,6 +1275,7 @@ private fun DockGlassPanel(
     cardWidth: Dp,
     gapUsed: Dp,
     innerPadding: Dp,
+    shelfAnchor: ShelfAnchor,
     onExpandFrom: (Int) -> Unit,
     onLaunch: (AppEntry) -> Unit,
     onMenu: (AppEntry) -> Unit,
@@ -1264,8 +1307,22 @@ private fun DockGlassPanel(
             enter = fadeIn(tween(200, delayMillis = 220)),
             exit = fadeOut(tween(90)),
         ) {
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            val screenH: Dp = androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp
             Row(
-                Modifier.padding(innerPadding),
+                Modifier
+                    .padding(innerPadding)
+                    // Report the row's real position: the shelf text starts at
+                    // the first icon's left edge and stops a breath above the
+                    // glass panel's top edge. Measured, not re-derived, so it
+                    // survives icon size / spacing / UI scale changes.
+                    .onGloballyPositioned { c ->
+                        val pos = c.positionInRoot()
+                        val start = (pos.x / density.density).dp
+                        val bottom = screenH - (pos.y / density.density).dp + innerPadding + 20.dp
+                        if (shelfAnchor.start != start) shelfAnchor.start = start
+                        if (shelfAnchor.bottom != bottom) shelfAnchor.bottom = bottom
+                    },
                 horizontalArrangement = Arrangement.spacedBy(gapUsed),
             ) {
                 rowApps.forEachIndexed { i, app ->

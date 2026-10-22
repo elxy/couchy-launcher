@@ -179,4 +179,13 @@
     <string name="cd_move_down">नीचे ले जाएँ</string>
     <string name="cd_delete_section">सेक्शन हटाएँ</string>
     <string name="about_source">सोर्स कोड</string>
+
+    <!-- Top Shelf: streaming app content above the dock -->
+    <string name="shelf_label">टॉप शेल्फ़</string>
+    <string name="shelf_sub">चयनित ऐप के लोकप्रिय वीडियो डॉक के ऊपर दिखाता है (Bilibili, iQIYI, Tencent Video, Youku, Douyu)। उनके सार्वजनिक वेब API से लाया जाता है।</string>
+    <string name="shelf_bilibili">बिलिबिली · लोकप्रिय</string>
+    <string name="shelf_douyu">डोउयु · लाइव</string>
+    <string name="shelf_iqiyi">iQIYI · लोकप्रिय</string>
+    <string name="shelf_tencent">Tencent Video · लोकप्रिय</string>
+    <string name="shelf_youku">Youku · लोकप्रिय</string>
 </resources>

@@ -193,4 +193,13 @@
     <string name="cd_move_down">Descendre</string>
     <string name="cd_delete_section">Supprimer la section</string>
     <string name="about_source">Code source</string>
+
+    <!-- Top Shelf: streaming app content above the dock -->
+    <string name="shelf_label">Top Shelf</string>
+    <string name="shelf_sub">Affiche les vidéos populaires de l\'app sélectionnée au-dessus du dock (Bilibili, iQIYI, Tencent Video, Youku, Douyu). Utilise leurs API web publiques.</string>
+    <string name="shelf_bilibili">Bilibili · Populaire</string>
+    <string name="shelf_douyu">Douyu · En direct</string>
+    <string name="shelf_iqiyi">iQIYI · Populaire</string>
+    <string name="shelf_tencent">Tencent Video · Populaire</string>
+    <string name="shelf_youku">Youku · Populaire</string>
 </resources>
