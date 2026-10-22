@@ -4,12 +4,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.graphics.drawable.toBitmap
 import com.conreo.couchytv.ui.tileColor
 import kotlinx.coroutines.Dispatchers
@@ -31,18 +28,16 @@ import java.io.File
 data class AppEntry(
     val pkg: String,
     val label: String,
-    /** 16:9 leanback banner if the app ships one, pre-rasterized (drawable released) */
-    val banner: ImageBitmap?,
-    val icon: ImageBitmap?,
+    /**
+     * The banner and the 128px icon as FILES in the artwork cache — both
+     * rasterized once at scan time and never decoded here. The card decodes
+     * what it draws through [AppArtworkCache] (see `appBanner`/`appIcon` in
+     * ui/AppCard.kt), so a package nobody scrolls to costs a path, not 0.6 MB.
+     */
+    val art: AppRepository.SnapshotArt?,
     val autoCategory: String,
     /** Tile color precomputed at scan time — never hashed during composition. */
     val tile: Color,
-    /**
-     * Cold-start only: the artwork is still on disk, and [banner] / [icon] are
-     * null because nothing has been decoded yet. The UI decodes what it draws
-     * from here (see `appBanner`/`appIcon` in ui/AppCard.kt).
-     */
-    val art: AppRepository.SnapshotArt? = null,
     /** lastUpdateTime of the package — used to reuse entries across rescans. */
     val stamp: Long,
     /** firstInstallTime — tiebreak so a newly installed app sorts last in its section. */
@@ -85,16 +80,13 @@ object AppRepository {
     private val snapshotJson = Json { ignoreUnknownKeys = true }
 
     /**
-     * Last scan as rendered by [scan], held as a FILE reference rather than a
-     * decoded bitmap: a cold start must not allocate ~100MB of textures before
-     * it may show anything.
+     * Where an entry's artwork lives on disk. One banner XOR one icon, decided
+     * by whether the package ships a leanback banner at all.
      */
     @Immutable
     data class SnapshotArt(
         val bannerFile: File?,
         val iconFile: File?,
-        val widthPx: Int,
-        val heightPx: Int,
     )
 
     /** Well-known packages -> category id */
@@ -187,8 +179,9 @@ object AppRepository {
                 val iconName = "$pkg-$stamp-i128.webp"
 
                 previous?.get(pkg)?.takeIf { it.stamp == stamp }?.let { cached ->
-                    if (cached.banner != null) validCacheNames.add(bannerName)
-                    if (cached.icon != null) validCacheNames.add(iconName)
+                    // Only the artwork that exists is kept alive across the sweep.
+                    cached.art?.bannerFile?.let { validCacheNames.add(it.name) }
+                    cached.art?.iconFile?.let { validCacheNames.add(it.name) }
                     return@async cached
                 }
 
@@ -196,32 +189,29 @@ object AppRepository {
                 // original behaviour — a size threshold wrongly demoted good
                 // banners whose loaded bitmap is below 320px on this density).
                 val bannerDrawable = runCatching { ai.loadBanner(pm) }.getOrNull()
-                val banner = if (bannerDrawable == null) null else
-                    cachedBitmap(cacheDir, bannerName, Bitmap.Config.ARGB_8888) {
+                val bannerFile = if (bannerDrawable == null) null else
+                    cachedArtFile(cacheDir, bannerName) {
                         // Full 8-bit, sized to the display (see bannerW above):
                         // crisp for vector/hi-res banners, lean on low-density TVs.
                         runCatching {
                             bannerDrawable.toBitmap(bannerW, bannerH, Bitmap.Config.ARGB_8888)
                         }.getOrNull()
                     }
-                val icon = if (banner == null) {
+                val iconFile = if (bannerFile == null) {
                     // 128px: sharp on the fallback tile even on 4K panels.
-                    cachedBitmap(cacheDir, iconName, Bitmap.Config.ARGB_8888) {
+                    cachedArtFile(cacheDir, iconName) {
                         runCatching { ri.loadIcon(pm)?.toBitmap(128, 128) }.getOrNull()
                     }
                 } else null
-                if (banner != null) validCacheNames.add(bannerName)
-                if (icon != null) validCacheNames.add(iconName)
-                // Upload textures ahead of first draw so the GPU never stalls
-                // mid-frame on a fresh bitmap.
-                banner?.prepareToDraw()
-                icon?.prepareToDraw()
+                bannerFile?.let { validCacheNames.add(it.name) }
+                iconFile?.let { validCacheNames.add(it.name) }
 
                 AppEntry(
                     pkg = pkg,
                     label = runCatching { ri.loadLabel(pm)?.toString() }.getOrNull() ?: pkg,
-                    banner = banner?.asImageBitmap(),
-                    icon = icon?.asImageBitmap(),
+                    art = (bannerFile ?: iconFile)?.let {
+                        SnapshotArt(bannerFile = bannerFile, iconFile = iconFile)
+                    },
                     autoCategory = autoCategory(ai.applicationInfo),
                     tile = tileColor(pkg),
                     stamp = stamp,
@@ -244,7 +234,7 @@ object AppRepository {
         // thread: a few KB of JSON, but the caller is the UI's frame-producing
         // scope and this must never show up as a hitch.
         withContext(Dispatchers.IO) {
-            writeSnapshot(File(context.filesDir, SNAPSHOT_NAME), result, bannerW, bannerH)
+            writeSnapshot(File(context.filesDir, SNAPSHOT_NAME), result)
         }
         result
     }
@@ -269,7 +259,6 @@ object AppRepository {
 
         val density = context.resources.displayMetrics.density
         val bannerW = (270 * density).toInt().coerceIn(320, 720)
-        val bannerH = bannerW * 9 / 16
 
         return snapshot.entries.mapNotNull { e ->
             // Both artwork files are named after the package's lastUpdateTime, so a
@@ -285,11 +274,9 @@ object AppRepository {
             AppEntry(
                 pkg = e.pkg,
                 label = e.label,
-                banner = null,
-                icon = null,
+                art = SnapshotArt(bannerFile, iconFile),
                 autoCategory = e.autoCategory,
                 tile = tileColor(e.pkg),
-                art = SnapshotArt(bannerFile, iconFile, bannerW, bannerH),
                 stamp = e.stamp,
                 firstInstall = e.firstInstall,
             )
@@ -299,8 +286,6 @@ object AppRepository {
     private fun writeSnapshot(
         file: File,
         entries: List<AppEntry>,
-        bannerW: Int,
-        bannerH: Int,
     ) {
         runCatching {
             val payload = Snapshot(
@@ -311,7 +296,7 @@ object AppRepository {
                         autoCategory = e.autoCategory,
                         stamp = e.stamp,
                         firstInstall = e.firstInstall,
-                        hasBanner = e.banner != null,
+                        hasBanner = e.art?.bannerFile != null,
                     )
                 }
             )
@@ -327,24 +312,19 @@ object AppRepository {
     }
 
     /**
-     * Reads a bitmap from [dir]/[name]; on miss, runs [create] and persists it
-     * as LOSSLESS WebP — smaller than PNG on disk, faster to decode, and (unlike
-     * the old lossy q90) never adds gradient banding to icons/banners.
-     * RAM/GPU cost is unchanged either way: it's set by the decoded size.
+     * The cache file for one piece of artwork, written on first sight and
+     * reused verbatim afterwards — as LOSSLESS WebP, smaller than PNG on disk
+     * and faster to decode, and (unlike the old lossy q90) it never adds
+     * gradient banding to icons/banners.
+     *
+     * Nothing is decoded here: the UI decodes what it draws and keeps that in
+     * [AppArtworkCache]. Reusing the file is all this needs to do.
      */
-    private fun cachedBitmap(
-        dir: File,
-        name: String,
-        config: Bitmap.Config,
-        create: () -> Bitmap?,
-    ): Bitmap? {
+    private fun cachedArtFile(dir: File, name: String, create: () -> Bitmap?): File? {
         val f = File(dir, name)
-        if (f.exists()) {
-            val opts = BitmapFactory.Options().apply { inPreferredConfig = config }
-            BitmapFactory.decodeFile(f.absolutePath, opts)?.let { return it }
-        }
+        if (f.exists()) return f
         val bmp = create() ?: return null
-        runCatching {
+        val written = runCatching {
             f.outputStream().use { out ->
                 if (Build.VERSION.SDK_INT >= 30) {
                     bmp.compress(Bitmap.CompressFormat.WEBP_LOSSLESS, 100, out)
@@ -353,8 +333,12 @@ object AppRepository {
                     bmp.compress(Bitmap.CompressFormat.WEBP, 100, out)
                 }
             }
-        }
-        return bmp
+            true
+        }.getOrDefault(false)
+        // The scan holds the only reference; release the pixels right away
+        // instead of waiting for the collector.
+        bmp.recycle()
+        return if (written) f else null
     }
 
     private fun autoCategory(ai: ApplicationInfo?): String {
