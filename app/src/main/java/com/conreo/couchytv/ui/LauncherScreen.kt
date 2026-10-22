@@ -81,6 +81,7 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.conreo.couchytv.Actions
 import com.conreo.couchytv.data.AppEntry
+import com.conreo.couchytv.data.AppList
 import com.conreo.couchytv.data.AppRepository
 import com.conreo.couchytv.data.Bing
 import com.conreo.couchytv.data.ConfigStore
@@ -367,9 +368,13 @@ fun LauncherApp(rescanTick: Int) {
     // The dock's flat app list (all sections concatenated, de-duped). Hoisted &
     // remembered so its identity stays stable across recompositions — otherwise a
     // fresh list on every clock tick blocks DockArea from strong-skipping.
-    val dockApps = remember(categorized) {
-        categorized.flatMap { it.second }.distinctBy { it.pkg }
+    // @Immutable wrapper: a bare List is an unstable type in Compose, which made every
+    // composable it was handed unskippable (see data/AppList.kt). The plain list stays
+    // available for the move/reorder logic below, which needs real List operations.
+    val dockList = remember(categorized) {
+        AppList(categorized.flatMap { it.second }.distinctBy { it.pkg })
     }
+    val dockApps = dockList.items
     val accent = ACCENTS[config.accent.coerceIn(0, ACCENTS.size - 1)]
 
     // ----- display dimensions: size + spacing drive everything, columns
@@ -923,7 +928,7 @@ fun LauncherApp(rescanTick: Int) {
                 when (config.layout) {
                     LAYOUT_DOCK -> DockArea(
                         modifier = Modifier.weight(1f).fillMaxWidth(),
-                        apps = dockApps,
+                        apps = dockList,
                         config = config,
                         accent = accent,
                         movePkg = movePkg,
@@ -1008,6 +1013,9 @@ fun LauncherApp(rescanTick: Int) {
                             ) {
                         items(categorized.size, key = { categorized[it].first.id }) { rowIndex ->
                             val (cat, catApps) = categorized[rowIndex]
+                            // Wrapped in the @Immutable AppList so the row can SKIP
+                            // instead of recomposing on every clock tick.
+                            val sectionApps = remember(catApps) { AppList(catApps) }
                             val isGrid = config.layout == LAYOUT_GRID
                             // One-shot launch entrance (tied to introShown, so it never
                             // replays on scroll/navigation): carousel rows slide in from
@@ -1048,14 +1056,14 @@ fun LauncherApp(rescanTick: Int) {
                                 }
                                 if (isGrid) {
                                     GridSection(
-                                        catApps, config, accent, movePkg, moveFocus,
+                                        sectionApps, config, accent, movePkg, moveFocus,
                                         cardWidth, gap, introShown,
                                         onLaunch = { app -> if (movePkg == null) Actions.launchApp(context, app.pkg) },
                                         onMenu = { app -> if (movePkg == null) menuFor = app },
                                     )
                                 } else {
                                     CarouselSection(
-                                        catApps, config, accent, movePkg, moveFocus,
+                                        sectionApps, config, accent, movePkg, moveFocus,
                                         cardWidth, gap,
                                         onLaunch = { app -> if (movePkg == null) Actions.launchApp(context, app.pkg) },
                                         onMenu = { app -> if (movePkg == null) menuFor = app },
@@ -1133,7 +1141,7 @@ fun LauncherApp(rescanTick: Int) {
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun CarouselSection(
-    catApps: List<AppEntry>,
+    catApps: AppList,
     config: LauncherConfig,
     accent: Color,
     movePkg: String?,
@@ -1167,8 +1175,8 @@ private fun CarouselSection(
             contentPadding = PaddingValues(horizontal = 44.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(gap),
         ) {
-            items(catApps.size, key = { catApps[it].pkg }) { i ->
-                val app = catApps[i]
+            items(catApps.items.size, key = { catApps.items[it].pkg }) { i ->
+                val app = catApps.items[i]
                 val moving = app.pkg == movePkg
                 AppCard(
                     app = app,
@@ -1192,7 +1200,7 @@ private fun CarouselSection(
  *  a row can never overflow, so the last icon is never squeezed. */
 @Composable
 private fun GridSection(
-    catApps: List<AppEntry>,
+    catApps: AppList,
     config: LauncherConfig,
     accent: Color,
     movePkg: String?,
@@ -1213,7 +1221,7 @@ private fun GridSection(
         val (cols, _) = fitRow(maxWidth, cardWidth, gap)
         val gapUsed = if (cols > 1) (maxWidth - cardWidth * cols) / (cols - 1) else 0.dp
         val blockWidth = cardWidth * cols + gapUsed * (cols - 1)
-        val rows = catApps.chunked(cols)
+        val rows = catApps.items.chunked(cols)
         // Launch entrance: icons bloom out from the section's centre — the middle
         // tiles pop first (scale + fade), outer ones stagger by distance. One-shot
         // via `intro`; sections composed later (scroll) start settled, no replay.
@@ -1268,7 +1276,7 @@ private fun GridSection(
 @Composable
 private fun DockArea(
     modifier: Modifier,
-    apps: List<AppEntry>,
+    apps: AppList,
     config: LauncherConfig,
     accent: Color,
     movePkg: String?,
@@ -1322,7 +1330,10 @@ private fun DockArea(
         val available = maxWidth - 80.dp - panelInnerPadding * 2
         val (cols, gapUsed) = fitRow(available, cardWidth, gap)
         val cardHeight = cardWidth * 9f / 16f
-        val rows = apps.chunked(cols)
+        val rows = remember(apps.items, cols) { apps.items.chunked(cols) }
+        // Same icons, second row and beyond — the grid's own copy, kept stable so
+        // the glass panel below can skip.
+        val rowApps = remember(rows) { AppList(rows.firstOrNull().orEmpty()) }
         // The grid opens focused on row 0, same column as the dock icon we came
         // from (row 0 is those same icons) — focus stays put, it doesn't jump down.
         val targetRow = 0
@@ -1357,7 +1368,7 @@ private fun DockArea(
             ) {
                 DockGlassPanel(
                     visible = intro && !expanded,
-                    rowApps = rows.firstOrNull().orEmpty(),
+                    rowApps = rowApps,
                     config = config,
                     accent = accent,
                     movePkg = movePkg,
@@ -1457,7 +1468,7 @@ private fun DockArea(
 @Composable
 private fun DockGlassPanel(
     visible: Boolean,
-    rowApps: List<AppEntry>,
+    rowApps: AppList,
     config: LauncherConfig,
     accent: Color,
     movePkg: String?,
@@ -1519,7 +1530,7 @@ private fun DockGlassPanel(
                     },
                 horizontalArrangement = Arrangement.spacedBy(gapUsed),
             ) {
-                rowApps.forEachIndexed { i, app ->
+                rowApps.items.forEachIndexed { i, app ->
                     val moving = app.pkg == movePkg
                     AppCard(
                         app = app,

@@ -59,7 +59,12 @@ fun AppCard(
     // it, using a short time window that expires on its own (a sticky flag
     // would eat the next legitimate press, since the release is delivered to
     // the menu's window and never comes back to this card).
-    val cardShape = SmoothCornerShape(LocalCornerRadius.current)
+    // The squircle used to be rebuilt on EVERY composition, and SmoothCornerShape has
+    // no equals() — so tv-material's outline cache (which keys on the shape INSTANCE)
+    // missed and rebuilt the path three times per card (surface, glow, border) on
+    // every recomposition. One instance per corner radius fixes it.
+    val corner = LocalCornerRadius.current
+    val cardShape = remember(corner) { SmoothCornerShape(corner) }
     // Report focus to the Top Shelf (dock only): the focused app's content takes
     // over the wallpaper. Writing to the holder's state does not recompose this
     // card or the grid — only the shelf reads it.
@@ -71,6 +76,39 @@ fun AppCard(
     fun fireLongPress() {
         longPressAt = SystemClock.uptimeMillis()
         onLongPress()
+    }
+
+    // The Surface style objects are @Composable defaults that hand back a FRESH
+    // instance on every composition — one allocation per card per frame, and a new
+    // identity every time for anything keyed on them. Built once, reused while the
+    // inputs are unchanged. Same values, same look.
+    val surfaceShape = rememberComputed(cardShape, MaterialTheme.shapes) {
+        ClickableSurfaceDefaults.shape(cardShape)
+    }
+    val surfaceColors = rememberComputed(app.tile, MaterialTheme.colorScheme) {
+        ClickableSurfaceDefaults.colors(
+            containerColor = app.tile,
+            focusedContainerColor = app.tile,
+            contentColor = Color.White,
+            focusedContentColor = Color.White,
+        )
+    }
+    val surfaceScale = remember { ClickableSurfaceDefaults.scale(focusedScale = 1.10f) }
+    val surfaceGlow = remember {
+        ClickableSurfaceDefaults.glow(
+            // Softer + tighter than before: reads at 3m, cheap to render on weak
+            // TV GPUs, and no longer competes with the accent ring.
+            focusedGlow = Glow(elevationColor = Color.Black.copy(alpha = 0.5f), elevation = 8.dp)
+        )
+    }
+    val surfaceBorder = rememberComputed(isMoving, accent, cardShape, MaterialTheme.colorScheme) {
+        ClickableSurfaceDefaults.border(
+            // Thin accent ring on focus (thicker while dragging in move mode).
+            focusedBorder = Border(
+                BorderStroke(if (isMoving) 3.dp else 2.dp, accent),
+                shape = cardShape,
+            )
+        )
     }
 
     // Focus: the card grows a touch, lifts on a soft tight shadow, and gains a
@@ -101,26 +139,11 @@ fun AppCard(
                 true // swallow the repeats themselves
             }
             .width(cardWidth),
-        shape = ClickableSurfaceDefaults.shape(cardShape),
-        colors = ClickableSurfaceDefaults.colors(
-            containerColor = app.tile,
-            focusedContainerColor = app.tile,
-            contentColor = Color.White,
-            focusedContentColor = Color.White,
-        ),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.10f),
-        glow = ClickableSurfaceDefaults.glow(
-            // Softer + tighter than before: reads at 3m, cheap to render on weak
-            // TV GPUs, and no longer competes with the accent ring.
-            focusedGlow = Glow(elevationColor = Color.Black.copy(alpha = 0.5f), elevation = 8.dp)
-        ),
-        border = ClickableSurfaceDefaults.border(
-            // Thin accent ring on focus (thicker while dragging in move mode).
-            focusedBorder = Border(
-                BorderStroke(if (isMoving) 3.dp else 2.dp, accent),
-                shape = cardShape,
-            )
-        ),
+        shape = surfaceShape,
+        colors = surfaceColors,
+        scale = surfaceScale,
+        glow = surfaceGlow,
+        border = surfaceBorder,
     ) {
         Box(
             Modifier

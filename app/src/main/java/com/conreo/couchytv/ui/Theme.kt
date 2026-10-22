@@ -1,6 +1,7 @@
 package com.conreo.couchytv.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.tv.material3.MaterialTheme
@@ -41,14 +42,20 @@ fun tileColor(pkg: String): Color {
 
 @Composable
 fun LiteTvTheme(accent: Color, content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = darkColorScheme(
+    // Remembered: a FRESH instance on every theme recomposition would invalidate every
+    // reader of MaterialTheme.colorScheme in the app (every card, the settings sheet)
+    // even though no colour had changed.
+    val scheme = remember(accent) {
+        darkColorScheme(
             primary = accent,
             surface = Color(0xEE1C1E24),
             onSurface = Color(0xFFE8EAED),
             surfaceVariant = Color(0xFF303440),
             onSurfaceVariant = Color(0xFF9AA0A6),
-        ),
+        )
+    }
+    MaterialTheme(
+        colorScheme = scheme,
         content = content,
     )
 }
