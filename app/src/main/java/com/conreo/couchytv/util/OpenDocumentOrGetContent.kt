@@ -3,6 +3,7 @@ package com.conreo.couchytv.util
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.net.Uri
 import androidx.activity.result.contract.ActivityResultContract
 
@@ -58,15 +59,33 @@ class OpenDocumentOrGetContent : ActivityResultContract<Array<String>, Uri?>() {
     /** Package names of activities that answer [intent] and are not known placeholders. */
     private fun realHandlers(context: Context, intent: Intent): List<String> =
         context.packageManager.queryIntentActivities(intent, 0)
+            .filterNot { isPlaceholder(it.activityInfo) }
             .map { it.activityInfo.packageName }
             .distinct()
-            .filterNot { it in PLACEHOLDER_PACKAGES }
+
+    private fun isPlaceholder(activity: ActivityInfo): Boolean =
+        isPlaceholderHandler(activity.packageName, activity.name)
 
     private fun hasUsableHandler(context: Context, intent: Intent): Boolean =
         realHandlers(context, intent).isNotEmpty()
 
-    private companion object {
-        /** Packages whose activities claim file intents but render nothing. */
-        val PLACEHOLDER_PACKAGES = setOf("com.google.android.tv.frameworkpackagestubs")
-    }
 }
+
+/**
+ * True for an activity that claims a file intent but renders nothing.
+ *
+ * Matched structurally as well as by package name. The stub ships under two package names
+ * in the wild — `com.google.android.tv.frameworkpackagestubs` on some sets and
+ * `com.android.tv.frameworkpackagestubs` on others — and an exact-package list covers only
+ * one of them: on an Android TV 14 image the other one resolved as a perfectly good
+ * handler, so OPEN_DOCUMENT was launched into the stub and the picker never appeared.
+ *
+ * Kept top-level and free of Android types so the rule can be unit tested.
+ */
+internal fun isPlaceholderHandler(packageName: String, activityName: String): Boolean =
+    packageName in PLACEHOLDER_PACKAGES ||
+        packageName.contains("frameworkpackagestubs", ignoreCase = true) ||
+        activityName.contains("stub", ignoreCase = true)
+
+/** Packages whose activities claim file intents but render nothing. */
+internal val PLACEHOLDER_PACKAGES = setOf("com.google.android.tv.frameworkpackagestubs")
