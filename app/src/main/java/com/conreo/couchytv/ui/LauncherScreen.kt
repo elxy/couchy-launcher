@@ -868,8 +868,14 @@ fun LauncherApp(rescanTick: Int) {
                 // When hidden it collapses to an invisible 4dp strip that is still
                 // focusable: Up from the top row slides it back into view.
                 var statusBarFocused by remember { mutableStateOf(false) }
+                // The height comes from StatusBar.kt's own arithmetic (chip + padding),
+                // so the box can never again be shorter than the content it clips.
                 val statusBarHeight by animateDpAsState(
-                    targetValue = if (config.showStatusBar || statusBarFocused) 80.dp else 4.dp,
+                    targetValue = if (config.showStatusBar || statusBarFocused) {
+                        STATUS_BAR_HEIGHT
+                    } else {
+                        STATUS_BAR_COLLAPSED
+                    },
                     label = "statusBarHeight",
                 )
                 Box(

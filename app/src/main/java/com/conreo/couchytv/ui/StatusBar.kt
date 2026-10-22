@@ -26,6 +26,27 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.conreo.couchytv.data.NetStatus
 
+/* ---- geometry ----
+ * The bar's height is arithmetic, not a guess. The tallest thing in it is a 40 dp
+ * status-icon target inside a cluster with 4 dp of its own padding: 48 dp. It used
+ * to be an 80 dp box with 18 dp of vertical padding around that 48 dp of content —
+ * 84 dp of content in an 80 dp box, so `clipToBounds` shaved 2 dp off the top and
+ * the bottom of the glass. Deriving the height from its parts is what stops the
+ * two from drifting apart again.
+ */
+
+/** Content height of the bar: the 40 dp icon target plus the cluster's own padding. */
+internal val STATUS_CHIP_HEIGHT = 48.dp
+
+/** Vertical padding of the bar, inside [STATUS_BAR_HEIGHT]. */
+internal val STATUS_BAR_PAD_V = 16.dp
+
+/** Height of the status bar — what the collapsed strip expands to. */
+internal val STATUS_BAR_HEIGHT = STATUS_CHIP_HEIGHT + STATUS_BAR_PAD_V * 2
+
+/** Height of the strip that the bar collapses to, and that reveals it on focus. */
+internal val STATUS_BAR_COLLAPSED = 4.dp
+
 @Composable
 fun StatusBar(
     net: NetStatus,
@@ -52,12 +73,15 @@ fun StatusBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 40.dp, vertical = 18.dp),
+            .padding(horizontal = 40.dp, vertical = STATUS_BAR_PAD_V),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
       Row(
-        modifier = cluster,
+        // weight(fill = false): the cluster yields width instead of being squeezed.
+        // Without it, a date and a clock that together exceed the bar crush this row
+        // and the CLOCK wraps onto two lines ("10:" / "57") — it did exactly that.
+        modifier = cluster.weight(1f, fill = false),
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
         verticalAlignment = Alignment.CenterVertically,
       ) {
@@ -92,7 +116,14 @@ fun StatusBar(
                 text = date,
                 style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
                 color = Color.White.copy(alpha = 0.75f),
-                modifier = Modifier.padding(start = 10.dp),
+                // The date is the first thing to give up room: one line, tail
+                // ellipsis, and it absorbs the squeeze. Without the weight the
+                // CLOCK gets clipped or wrapped instead.
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .padding(start = 10.dp)
+                    .weight(1f, fill = false),
             )
         }
         Text(
@@ -100,6 +131,9 @@ fun StatusBar(
             text = time,
             style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
             color = Color.White,
+            // Never wrap and never clip: wrapping split the clock into "10:" / "57".
+            maxLines = 1,
+            softWrap = false,
             modifier = Modifier.padding(start = 10.dp),
         )
       }
