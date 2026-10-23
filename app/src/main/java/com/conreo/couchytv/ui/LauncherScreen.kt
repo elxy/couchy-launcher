@@ -1392,9 +1392,10 @@ private fun DockArea(
         val dockRisePx = with(androidx.compose.ui.platform.LocalDensity.current) {
             (maxHeight - peekH - cardHeight - 52.dp).toPx()
         }.toInt().coerceAtLeast(0)
-        // Row spacing morphs from a wide "dock" gap down to the tight grid gap as
-        // it opens (rows start far apart, like the dock, then draw together), and
-        // back out on close.
+        // Row spacing morphs from a wide "dock" gap down to the grid gap as it
+        // opens (rows start far apart, like the dock, then draw together), and back
+        // out on close. The name under each card is part of the card, so the gap
+        // itself stays the plain grid gap — the row pitch grows by the text line only.
         val rowGap by animateDpAsState(
             targetValue = if (expanded) gap else gap + cardHeight * 0.35f,
             animationSpec = tween(340, easing = FastOutSlowInEasing),
@@ -1485,6 +1486,10 @@ private fun DockArea(
                                         accent = accent,
                                         cardWidth = cardWidth,
                                         showLabel = config.showAppLabels,
+                                        // The drawer is the one place the user browses
+                                        // the whole app list, so name every card — a wall
+                                        // of banner logos is not recognisable.
+                                        labelBelow = true,
                                         // Up on row 0 collapses the grid back into the
                                         // dock (focus returns to the same column), so
                                         // getting out of the drawer is the mirror of
