@@ -47,8 +47,23 @@ app/src/main/java/com/conreo/couchytv/
   ui/SettingsSheet.kt       D-pad settings panel (animated sub-screens)
   ui/SetupWizard.kt         first-run wizard (default-home + VPN steps)
   ui/AppCard.kt, Menus.kt, StatusBar.kt, Theme.kt, Icons.kt
-app/src/main/res/          strings (values + 17 locales), drawables, themes
+app/src/main/res/          strings (values + 17 locales), drawables, themes, launcher icons
+art/                       couch artwork (SVG) and art/make-icons.py, which regenerates
+                           every icon/banner bitmap from it
 ```
+
+### Icons
+
+`art/couchy-launcher.svg` is the only source of the couch artwork. Every bitmap —
+the `mipmap-*/ic_launcher*.png` launcher icons, the adaptive foreground, and the
+store listing images — is generated from it:
+
+```
+python3 art/make-icons.py      # needs rsvg-convert
+```
+
+The output is committed, so a normal build never runs this. Re-run it after
+editing the artwork, and commit the PNGs together with the SVG.
 
 ## Conventions
 
@@ -130,8 +145,20 @@ app/src/main/java/com/conreo/couchytv/
   ui/SettingsSheet.kt       方向键设置面板（子页面带动画）
   ui/SetupWizard.kt         首次运行向导（默认主页 + VPN 步骤）
   ui/AppCard.kt、Menus.kt、StatusBar.kt、Theme.kt、Icons.kt
-app/src/main/res/          字符串（values + 17 种语言）、图形、主题
+app/src/main/res/          字符串（values + 17 种语言）、图形、主题、启动器图标
+art/                       沙发图形（SVG）与 art/make-icons.py，后者由它生成全部图标位图
 ```
+
+### 图标
+
+`art/couchy-launcher.svg` 是沙发图形的唯一来源。所有位图都由它生成——包括
+`mipmap-*/ic_launcher*.png` 启动器图标、自适应图标前景层，以及上架商店的图片：
+
+```
+python3 art/make-icons.py      # 需要 rsvg-convert
+```
+
+产物已提交到仓库，正常构建不会执行此脚本。修改图形后重新运行，并把 PNG 与 SVG 一起提交。
 
 ## 约定
 

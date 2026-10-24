@@ -32,7 +32,7 @@ These keep their own licenses, all compatible with GPLv3:
 
 | Component | Where | License |
 |---|---|---|
-| Couch artwork — Twemoji couch emoji ([source](https://github.com/twitter/twemoji)) | `art/couchy-launcher.svg`, `res/drawable/ic_couch.xml`, app icon & banner | **MIT** |
+| Couch artwork — Twemoji couch emoji ([source](https://github.com/twitter/twemoji)) | `art/couchy-launcher.svg`, `res/drawable/ic_couch.xml`, every icon and banner bitmap via `art/make-icons.py` | **MIT** |
 | Material Design icon path data — Google | `ui/Icons.kt` (vector path strings) | Apache-2.0 |
 | Cookie font — Ania Kruk (Google Fonts) | `res/font/cookie.ttf` (the "Buy me a coffee" heading) | **SIL OFL 1.1** |
 | AndroidX / Jetpack Compose, `androidx.tv`, DataStore | framework / UI | Apache-2.0 |
