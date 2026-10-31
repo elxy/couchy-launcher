@@ -131,6 +131,15 @@ private val ScrimBottom = Brush.verticalGradient(
     0.80f to Color.Black.copy(alpha = 0f),
     1.0f to Color.Black.copy(alpha = 0.5f),
 )
+/** The readability scrim for a config value — null when it is off. */
+private fun scrimFor(mode: Int): Brush? = when (mode) {
+    4 -> null // off
+    3 -> ScrimFull
+    2 -> ScrimBottom
+    1 -> ScrimTop
+    else -> ScrimTopBottom
+}
+
 /** Spacing steps between cards — 5 levels. */
 val GAP_SIZES = listOf(4.dp, 10.dp, 16.dp, 24.dp, 32.dp)
 /** Video wallpaper playback speeds (index stored in config.videoSpeed). */
@@ -603,13 +612,28 @@ fun LauncherApp(rescanTick: Int) {
         }
     }
 
-    // ----- wallpaper: decoded off the main thread, downsampled, cached.
+    // The wallpaper is baked to the SCREEN's aspect (see decodeWallpaperPair),
+    // so the scrim in it lands exactly where the live layer used to be. dp and
+    // px share the aspect, so this ratio is the panel's.
+    val screenCfg = androidx.compose.ui.platform.LocalConfiguration.current
+    val screenAspect =
+        if (screenCfg.screenHeightDp > 0) screenCfg.screenWidthDp.toFloat() / screenCfg.screenHeightDp
+        else 16f / 9f
+
+    // ----- wallpaper: decoded off the main thread, cropped to the screen and
+    // baked with the readability scrim.
     // A ~100px copy is decoded alongside: upscaled by the GPU it looks
     // blurred, and crossfading it in costs one texture blend per frame
-    // instead of a full-screen RenderEffect blur (heavy on TV GPUs). -----
+    // instead of a full-screen RenderEffect blur (heavy on TV GPUs).
+    //
+    // The scrim is baked INTO the sharp copy here, so a static wallpaper costs
+    // one opaque full-screen blit per frame instead of a blit plus a full-screen
+    // alpha gradient (LITE's "at most one full-screen paint"). Video wallpapers
+    // and preset gradients keep the live scrim. -----
     val wallpaperPair by produceState<Pair<ImageBitmap?, ImageBitmap?>>(
         initialValue = null to null,
         config.useCustomWallpaper, config.useBingWallpaper, bingPhoto?.date, wallpaperVersion,
+        config.scrimMode, screenAspect,
     ) {
         val source = when {
             config.useBingWallpaper -> bingPhoto?.file
@@ -617,7 +641,9 @@ fun LauncherApp(rescanTick: Int) {
             else -> null
         }
         value = if (source == null || !source.exists()) null to null
-        else withContext(Dispatchers.IO) { decodeWallpaperPair(source) }
+        else withContext(Dispatchers.IO) {
+            decodeWallpaperPair(source, scrimFor(config.scrimMode), screenAspect)
+        }
     }
     val (wallpaperSharp, wallpaperBlurred) = wallpaperPair
     val presetBrush = remember(config.wallpaper) {
@@ -758,10 +784,11 @@ fun LauncherApp(rescanTick: Int) {
             // Wallpaper + readability scrim.
             // Priority: built-in aerials > local video > photo > preset.
             val videoSpeed = VIDEO_SPEEDS[config.videoSpeed.coerceIn(0, VIDEO_SPEEDS.size - 1)]
-            val aerial = aerialWallpaper
-            if (aerial != null && net.connected && !aerialError) {
+            val aerialClip = aerialWallpaper.takeIf { net.connected && !aerialError }
+            val localVideo = config.useVideoWallpaper && config.videoUri.isNotEmpty()
+            if (aerialClip != null) {
                 VideoWallpaper(
-                    uri = aerial.uri,
+                    uri = aerialClip.uri,
                     speed = videoSpeed,
                     loop = false, // play once, then shuffle to the next aerial
                     coverBrush = presetBrush,
@@ -773,7 +800,7 @@ fun LauncherApp(rescanTick: Int) {
                     // Feeds the place label that changes as the camera moves.
                     onPosition = { captionClock.seconds = it },
                 )
-            } else if (config.useVideoWallpaper && config.videoUri.isNotEmpty()) {
+            } else if (localVideo) {
                 VideoWallpaper(uri = config.videoUri, speed = videoSpeed, loop = true, coverBrush = presetBrush)
             } else if (wallpaperSharp != null) {
                 // Crossfade: the Bing days rotate every 10 minutes, and a snap
@@ -787,7 +814,9 @@ fun LauncherApp(rescanTick: Int) {
                     Image(
                         bitmap = bitmap,
                         contentDescription = null,
-                        contentScale = ContentScale.Crop,
+                        // The bitmap is already cropped to the screen's aspect, so
+                        // this is a 1:1 blit — no sampling, nothing outside the panel.
+                        contentScale = ContentScale.FillBounds,
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
@@ -825,12 +854,19 @@ fun LauncherApp(rescanTick: Int) {
                     )
                 }
             }
-            when (config.scrimMode) {
-                4 -> {} // off
-                3 -> Box(Modifier.fillMaxSize().background(ScrimFull))
-                2 -> Box(Modifier.fillMaxSize().background(ScrimBottom))
-                1 -> Box(Modifier.fillMaxSize().background(ScrimTop))
-                else -> Box(Modifier.fillMaxSize().background(ScrimTopBottom))
+            // The scrim is already IN the photo bitmap (baked at decode time);
+            // drawing it again would dim the wallpaper twice. A video wallpaper
+            // is a SurfaceView BELOW this window and the preset gradient has no
+            // bitmap to bake into, so those two keep the live layer.
+            val scrimBaked = aerialClip == null && !localVideo && wallpaperSharp != null
+            if (!scrimBaked) {
+                when (config.scrimMode) {
+                    4 -> {} // off
+                    3 -> Box(Modifier.fillMaxSize().background(ScrimFull))
+                    2 -> Box(Modifier.fillMaxSize().background(ScrimBottom))
+                    1 -> Box(Modifier.fillMaxSize().background(ScrimTop))
+                    else -> Box(Modifier.fillMaxSize().background(ScrimTopBottom))
+                }
             }
 
             // Top Shelf: the focused dock app's stills replace the wallpaper while
@@ -1898,17 +1934,73 @@ private fun contentDisplayName(context: android.content.Context, uri: String): S
     }.getOrNull()?.takeIf { it.isNotBlank() }
 }
 
-/** Decodes the sharp + pseudo-blur copies of a wallpaper file (see above). */
-private fun decodeWallpaperPair(file: File): Pair<ImageBitmap?, ImageBitmap?> = runCatching {
-    // 1280px is indistinguishable as a scrimmed background but the texture is
-    // ~2.3× smaller than 1920 — TV GPUs choke on the first upload of full-res
-    // textures. prepareToDraw() moves the upload off the first visible frame.
+/**
+ * Decodes the sharp + pseudo-blur copies of a wallpaper file (see above).
+ *
+ * The sharp copy is CROPPED to the screen's aspect and has [scrim] drawn into
+ * it, so the launcher draws one screen-shaped opaque bitmap per frame instead
+ * of a cropped, upscaled photo plus a full-screen alpha gradient. Baking the
+ * crop matters: with a portrait photo the live gradient used to span the
+ * SCREEN, and a gradient baked into the un-cropped photo would land off-screen.
+ *
+ * 1280 wide is indistinguishable behind the scrim, and ~2.3× smaller a texture
+ * than 1920 — TV GPUs choke on the first upload of full-res textures.
+ * prepareToDraw() moves that upload off the first visible frame.
+ */
+private fun decodeWallpaperPair(
+    file: File,
+    scrim: Brush?,
+    aspect: Float,
+): Pair<ImageBitmap?, ImageBitmap?> = runCatching {
     val sharp = decodeDownsampled(file, maxWidth = 1280)
+        ?.let { bmp -> bakeBackdrop(bmp, scrim, aspect) }
         ?.also { it.prepareToDraw() }?.asImageBitmap()
     val blurred = decodeDownsampled(file, maxWidth = 96)
         ?.also { it.prepareToDraw() }?.asImageBitmap()
     sharp to blurred
 }.getOrDefault(null to null)
+
+/**
+ * Crops [src] to [aspect], draws [scrim] over the result and returns it.
+ *
+ * ARGB_8888, not the 565 the source was decoded at: a black gradient is exactly
+ * the kind of smooth ramp that shows 565's steps. The photo itself keeps the
+ * 565 pixels it had before this existed.
+ */
+private fun bakeBackdrop(
+    src: android.graphics.Bitmap,
+    scrim: Brush?,
+    aspect: Float,
+): android.graphics.Bitmap {
+    val w = 1280
+    val h = (w / aspect).toInt().coerceAtLeast(1)
+    val out = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+    val canvas = android.graphics.Canvas(out)
+    // Same framing ContentScale.Crop gave the GPU, done once here: scale the
+    // source until it covers the target, centre it, let the edges fall off.
+    val scale = maxOf(w.toFloat() / src.width, h.toFloat() / src.height)
+    val dw = src.width * scale
+    val dh = src.height * scale
+    canvas.drawBitmap(
+        src,
+        android.graphics.Rect(0, 0, src.width, src.height),
+        android.graphics.RectF((w - dw) / 2f, (h - dh) / 2f, (w + dw) / 2f, (h + dh) / 2f),
+        android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG),
+    )
+    src.recycle()
+    if (scrim != null) {
+        val image = out.asImageBitmap()
+        androidx.compose.ui.graphics.drawscope.CanvasDrawScope().draw(
+            androidx.compose.ui.unit.Density(1f),
+            androidx.compose.ui.unit.LayoutDirection.Ltr,
+            androidx.compose.ui.graphics.Canvas(image),
+            androidx.compose.ui.geometry.Size(w.toFloat(), h.toFloat()),
+        ) {
+            drawRect(brush = scrim)
+        }
+    }
+    return out
+}
 
 /** Decodes a bitmap with an inSampleSize so its width stays near [maxWidth]. */
 private fun decodeDownsampled(file: File, maxWidth: Int): android.graphics.Bitmap? {
