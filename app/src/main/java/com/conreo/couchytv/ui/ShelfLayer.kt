@@ -130,17 +130,6 @@ class ShelfUi {
 
 val LocalShelfFocus = staticCompositionLocalOf<ShelfFocus?> { null }
 
-/**
- * Playback position of the wallpaper clip, in whole seconds. Written by the
- * player, read ONLY by the caption text when it is on screen — a stable holder,
- * so a per-second tick never recomposes the launcher itself (same trick as
- * [ShelfFocus]).
- */
-@Stable
-class CaptionClock {
-    var seconds by mutableIntStateOf(0)
-}
-
 /** Seconds each picture stays before the shelf moves on. */
 private const val SHELF_SECONDS = 8
 
@@ -159,11 +148,8 @@ private const val FOCUS_SETTLE_MS = 350L
  * buttons.
  *
  * When there is no shelf content to show — the focused app has no source at all
- * (e.g. 央视频) or its listing came back empty — the band above the dock is used
- * for the wallpaper's caption, instead of any empty shelf chrome: no dots, no
- * placeholder. [caption] is a fixed line (Bing's credit, the local video's
- * name); [timedCaption] is the Apple aerials' place label, which follows
- * playback through [captionClock].
+ * (e.g. 央视频) or its listing came back empty — nothing is drawn over the
+ * wallpaper: the band above the dock stays clean, with no caption and no dots.
  */
 @Composable
 fun ShelfLayer(
@@ -179,12 +165,8 @@ fun ShelfLayer(
      * still ends: the grid owns the D-pad.
      */
     drawerOpen: Boolean,
-    captionSuppressed: Boolean,
     scrim: Brush?,
     mode: ShelfUi,
-    caption: String?,
-    timedCaption: List<Pair<Int, String>>?,
-    captionClock: CaptionClock?,
     browseFocus: FocusRequester,
     onPlay: (Shelf.Item) -> Unit,
     onUp: () -> Unit,
@@ -277,58 +259,13 @@ fun ShelfLayer(
     }
 
     // No shelf content (no source for this app, or its listing failed) → the
-    // band above the dock carries the wallpaper's caption instead. The shelf
-    // text replaces it the moment there are stills to describe. [suppressed]
-    // (move mode) hides the stills and ends browsing, but the caption is the
-    // wallpaper's own description and lives in the empty band on the LEFT —
-    // the settings sheet and the app menu only cover the right edge, so the
-    // caption stays. The drawer keeps the stills, so this only matters when
-    // there is none. Only a full-screen takeover ([captionSuppressed]) hides it.
+    // wallpaper stays clean, with nothing drawn over it.
     val noShelf = shownPkg == null || (mode.itemsPkg == shownPkg && mode.items.isEmpty())
     val shelfOn = !noShelf && !suppressed
     // Published for the launcher (the dock grid uses the still as its backdrop
     // and skips blurring the wallpaper underneath it). In a side effect, not in
     // the composition body: the reader is an ancestor.
     androidx.compose.runtime.SideEffect { if (mode.showing != shelfOn) mode.showing = shelfOn }
-    val captionText = if (!noShelf || captionSuppressed) null else {
-        val timeline = timedCaption
-        val clock = captionClock
-        if (timeline.isNullOrEmpty() || clock == null) caption
-        // The clip's place label changes as the camera moves on (tvOS does the
-        // same); before the first entry, show the first one.
-        else timeline.lastOrNull { it.first <= clock.seconds }?.second
-            ?: timeline.first().second
-    }
-    AnimatedVisibility(
-        visible = !captionText.isNullOrEmpty(),
-        enter = fadeIn(tween(450)),
-        exit = fadeOut(tween(320)),
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        Box(Modifier.fillMaxSize()) {
-            Text(
-                text = captionText.orEmpty(),
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = 20.sp,
-                    lineHeight = 26.sp,
-                    shadow = ShelfShadow,
-                ),
-                color = Color.White.copy(alpha = 0.78f),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(
-                        start = anchor.start,
-                        end = 24.dp,
-                        bottom = anchor.bottom + CaptionLift,
-                    )
-                    // Wider than the shelf text column: the larger type needs
-                    // the room to stay within two lines.
-                    .fillMaxWidth(0.72f),
-            )
-        }
-    }
 }
 
 @Composable
@@ -582,8 +519,3 @@ private val ShelfShadow = Shadow(
     offset = androidx.compose.ui.geometry.Offset(0f, 2f),
     blurRadius = 12f,
 )
-
-/** How far the wallpaper caption sits above the dock's text band — roughly one
- *  line of its own type, so it reads as a separate row from the dock instead of
- *  hugging the glass panel. */
-private val CaptionLift = 26.dp
