@@ -222,7 +222,11 @@ fun AppCard(
         }
         // The name under the card. It sits on the wallpaper, not on artwork, so it
         // needs no scrim — white at 18sp (tv-material's 14sp label vanishes on a TV)
-        // with a shadow deep enough to hold up over a bright picture.
+        // with a hard shadow deep enough to hold up over a bright picture.
+        //
+        // No blur: Skia redraws a blurred copy of the glyphs every frame, and the
+        // drawer puts ~40 of these on screen while it scrolls. A crisp 2px offset
+        // reads the same at 3 m and costs one more glyph pass, not a blur mask.
         if (showLabel && labelBelow) {
             Text(
                 text = app.label,
@@ -232,7 +236,7 @@ fun AppCard(
                     shadow = androidx.compose.ui.graphics.Shadow(
                         color = Color.Black.copy(alpha = 0.9f),
                         offset = androidx.compose.ui.geometry.Offset(0f, 2f),
-                        blurRadius = 8f,
+                        blurRadius = 0f,
                     ),
                 ),
                 maxLines = 1,
