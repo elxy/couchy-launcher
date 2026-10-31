@@ -51,14 +51,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -1021,20 +1018,13 @@ fun LauncherApp(rescanTick: Int) {
                                 ): Float = offset - pivotPx
                             }
                         }
-                        // Rows crossing the top edge fade out (and back in on the way
-                        // down) instead of being hard-clipped by an invisible wall.
-                        // Kept to the peek sliver so the focused section's label,
-                        // which sits just below it, stays fully readable.
-                        val fadePx = peekPx
-                        // Hoisted out of drawWithContent: rebuilt inside the draw
-                        // lambda it re-allocated a Brush (+ shader) every frame.
-                        val fadeBrush = remember(fadePx) {
-                            Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, Color.Black),
-                                startY = 0f,
-                                endY = fadePx,
-                            )
-                        }
+                        // No top-edge fade. It used to be a full-screen
+                        // `compositingStrategy = Offscreen` layer masked with
+                        // BlendMode.DstIn, which re-rendered and re-composited
+                        // 1920×1080 offscreen on EVERY scrolling frame — the single
+                        // most expensive thing in the grid layouts. The peek sliver
+                        // is clipped at the viewport edge instead, exactly like the
+                        // dock's own second-row peek (see PeekStrip).
                         androidx.compose.runtime.CompositionLocalProvider(
                             androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides vPivot
                         ) {
@@ -1043,12 +1033,7 @@ fun LauncherApp(rescanTick: Int) {
                                     .fillMaxSize()
                                     // Restore the last-focused card when focus returns
                                     // (e.g. coming back down from the status bar).
-                                    .focusRestorer()
-                                    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-                                    .drawWithContent {
-                                        drawContent()
-                                        drawRect(brush = fadeBrush, blendMode = BlendMode.DstIn)
-                                    },
+                                    .focusRestorer(),
                                 contentPadding = PaddingValues(
                                     top = with(density) { pivotPx.toDp() },
                                     bottom = with(density) { peekPx.toDp() } + 16.dp,
