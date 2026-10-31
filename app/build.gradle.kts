@@ -15,6 +15,17 @@ android {
         targetSdk = 34
         versionCode = 7
         versionName = "1.0.6"
+
+        // Optional ABI restriction for local single-arch builds:
+        //   ./gradlew assembleDebug -Pabi=armeabi-v7a
+        // Unset (the default, incl. F-Droid) keeps the universal APK.
+        val abi = (project.findProperty("abi") as String?)
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+        if (!abi.isNullOrEmpty()) {
+            ndk { abiFilters += abi }
+        }
     }
 
     // Release signing key, supplied by CI via environment variables (from GitHub
