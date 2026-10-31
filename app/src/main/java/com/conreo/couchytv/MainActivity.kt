@@ -1,6 +1,7 @@
 package com.conreo.couchytv
 
 import android.content.BroadcastReceiver
+import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -74,6 +75,22 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         unregisterReceiver(packageReceiver)
         super.onDestroy()
+    }
+
+    /**
+     * Everything heavy the launcher holds — tile artwork, Top Shelf stills — is
+     * also on disk. When the system asks for memory back, actually give some:
+     * free the caches and let a re-composed card re-decode its WebP instead of
+     * being killed in the background.
+     */
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level == ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL ||
+            level == ComponentCallbacks2.TRIM_MEMORY_COMPLETE
+        ) {
+            com.conreo.couchytv.data.AppArtworkCache.clear()
+            com.conreo.couchytv.data.Shelf.trimMemory()
+        }
     }
 
     companion object {
