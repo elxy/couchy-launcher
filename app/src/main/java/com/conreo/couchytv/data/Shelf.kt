@@ -94,15 +94,38 @@ object Shelf {
     private val itemsCache = HashMap<String, Pair<Long, List<Item>>>()
 
     /**
+     * Widest still any source publishes (iQIYI's 2560×1440). A bigger panel
+     * cannot get more pixels than this, and a smaller one gets what it can
+     * show — see [stillWidth].
+     */
+    private const val MAX_STILL_WIDTH = 2560
+
+    /**
      * Decoded stills, kept in RAM so a cross-fade never re-downloads. Budgeted
-     * in bytes, not entries: one 2560×1440 still is ~14 MB, and two of them sit
-     * in memory during every cross-fade.
+     * in bytes, not entries: three screen-filling stills — the one on screen,
+     * the cross-fade partner, and the one [image] warms up ahead of the D-pad.
      */
     private val images = object : LruCache<String, Bitmap>(
-        ((Runtime.getRuntime().maxMemory() / 6).coerceAtMost(96L * 1024 * 1024)).toInt()
+        minOf(
+            3L * MAX_STILL_WIDTH * (MAX_STILL_WIDTH * 9 / 16) * 4,
+            Runtime.getRuntime().maxMemory() / 8,
+        ).toInt()
     ) {
         override fun sizeOf(key: String, value: Bitmap) = value.byteCount
     }
+
+    /** Drop the decoded stills — the process is short on memory (see MainActivity). */
+    fun trimMemory() = images.evictAll()
+
+    /**
+     * Width a still is decoded to: the panel's, never above what the sources
+     * publish. A 1080p set therefore throws away iQIYI's extra 1.33×
+     * (14 MB of texture for a picture the GPU would minify back to 1920 anyway).
+     */
+    private fun stillWidth(ctx: Context): Int = minOf(
+        ctx.resources.displayMetrics.widthPixels.coerceAtLeast(1280),
+        MAX_STILL_WIDTH,
+    )
 
     fun has(pkg: String) = pkg in sources
 
@@ -138,14 +161,13 @@ object Shelf {
 
     /**
      * The still for [item] — from RAM, the disk cache, or the network, in that
-     * order. Decoded at the panel's own width (capped by the source, never
-     * upscaled) so a 4K TV gets the sharpest picture the service has.
+     * order. Decoded at the panel's own width (see [stillWidth]) — the sharpest
+     * picture the service publishes, minus any pixels the screen cannot show.
      */
     suspend fun image(ctx: Context, item: Item): Bitmap? = withContext(Dispatchers.IO) {
         val url = item.image
         images.get(url)?.let { return@withContext it }
-        // Panel width in pixels; a 4K TV asks for the full rendition.
-        val maxWidth = ctx.resources.displayMetrics.widthPixels.coerceAtLeast(1280)
+        val maxWidth = stillWidth(ctx)
         val dir = File(ctx.cacheDir, "shelf").apply { mkdirs() }
         val file = File(dir, Integer.toHexString(url.hashCode()) + ".img")
         var bmp: Bitmap? = if (file.exists()) decode(file, maxWidth, item.trimBars) else null
@@ -212,9 +234,8 @@ object Shelf {
         // A full-screen backdrop needs real pixels; anything under 480px wide is
         // a placeholder/thumbnail and would look like a blurry mess on a TV.
         if (bounds.outWidth < 480) return null
-        // Downsample only when HALF the picture would still cover the panel —
-        // on a 4K set nothing is thrown away; on a 1080p set a 2560-wide still
-        // becomes 1280 instead of burning 14 MB of RAM for no visible gain.
+        // inSampleSize only halves, so it lands on the last power of two that
+        // still covers the panel (2560 stays 2560 on a 1920 screen).
         var sample = 1
         while (bounds.outWidth / (sample * 2) >= maxWidth) sample *= 2
         val opts = BitmapFactory.Options().apply {
@@ -223,7 +244,17 @@ object Shelf {
             // clearly visible, and sharpness is the whole point of this feature.
             inPreferredConfig = Bitmap.Config.ARGB_8888
         }
-        val bmp = BitmapFactory.decodeFile(file.path, opts) ?: return null
+        var bmp = BitmapFactory.decodeFile(file.path, opts) ?: return null
+        // Take the rest of the oversampling out on the CPU: what is left is a
+        // texture bigger than the screen, which only costs upload time, RAM and
+        // cache misses in the sampler. 25% slack keeps the source's own detail.
+        if (bmp.width > maxWidth * 5 / 4) {
+            val scaled = Bitmap.createScaledBitmap(
+                bmp, maxWidth, (bmp.height.toLong() * maxWidth / bmp.width).toInt(), true,
+            )
+            if (scaled !== bmp) bmp.recycle()
+            bmp = scaled
+        }
         return (if (trim) trimBars(bmp) else bmp).also { it.prepareToDraw() }
     }
 

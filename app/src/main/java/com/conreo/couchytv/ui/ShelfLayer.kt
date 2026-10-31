@@ -416,8 +416,12 @@ private fun ShelfContent(
         // picture is ready, so a failed fetch leaves the wallpaper untouched.
         Crossfade(targetState = shown, animationSpec = tween(700), label = "shelfPic") { state ->
             if (state != null) {
-                // Settle from a slight zoom, like a camera coming to rest.
-                var settled by remember(state) { mutableStateOf(false) }
+                // Settle from a slight zoom, like a camera coming to rest —
+                // but only when the USER changed the picture (Left/Right while
+                // browsing). The 8 s auto-rotation used to play it too: 2.2 s of
+                // scaling a full-screen layer, i.e. the one thing still moving
+                // in an otherwise idle launcher.
+                var settled by remember(state) { mutableStateOf(!browsing) }
                 LaunchedEffect(state) { settled = true }
                 val zoom by animateFloatAsState(
                     targetValue = if (settled) 1f else 1.045f,
