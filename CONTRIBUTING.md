@@ -8,7 +8,7 @@ Thanks for helping out! Couchy is GPLv3 — by contributing you agree your chang
 
 ## Build
 
-Requirements: **JDK 17**, the **Android SDK** (API 34), and either Android Studio (Ladybug+) or the command line. There's no `local.properties` in the repo — point Gradle at your SDK:
+Requirements: **JDK 21** (17 works too; 22 and newer do not — this Gradle/Kotlin pair cannot parse their version string), the **Android SDK** (API 34), and either Android Studio (Ladybug+) or the command line. There's no `local.properties` in the repo — point Gradle at your SDK:
 
 ```
 export ANDROID_HOME=~/Android/Sdk      # or set sdk.dir in local.properties
@@ -106,7 +106,7 @@ Releases are tagged `vX.Y` on the default branch. The F-Droid build recipe lives
 
 ## 构建
 
-环境要求：**JDK 17**、**Android SDK**（API 34），以及 Android Studio（Ladybug 及以上）或命令行。仓库中没有 `local.properties`——需让 Gradle 指向你的 SDK：
+环境要求：**JDK 21**（17 也可以；22 及以上不行——这对 Gradle/Kotlin 版本解析不了它的版本号）、**Android SDK**（API 34），以及 Android Studio（Ladybug 及以上）或命令行。仓库中没有 `local.properties`——需让 Gradle 指向你的 SDK：
 
 ```
 export ANDROID_HOME=~/Android/Sdk      # 或在 local.properties 中设置 sdk.dir
