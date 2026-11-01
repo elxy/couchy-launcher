@@ -1,0 +1,482 @@
+=== PhoneWindowManager.interceptKeyBeforeDispatching (total 975) ===
+ 200 move/from16      v4, v41
+ 201 invoke-virtual   v0, v2, v3, v4, Lcom/android/server/policy/CustomPWM;->interceptKeyBeforeDispatching(Lcom/android/server/policy/WindowManagerPolicy$WindowState; Landroid/view/KeyEvent; I)J
+ 202 move-result-wide v8
+ 203 const-wide/16    v14, 0
+ 204 cmp-long         v0, v8, v14
+ 205 if-gez           v0, +5e0h
+ 206 const-wide/16    v17, -1
+ 207 cmp-long         v0, v8, v17
+ 208 if-nez           v0, +008h
+ 209 move/from16      v37, v11
+ 210 move/from16      v4, v21
+ 211 goto/16          +5d8h
+ 212 const/16         v0, 133
+ 213 const/4          v5, 3
+ 214 if-eq            v7, v5, +492h
+ 215 if-ne            v7, v0, +008h
+ 216 move/from16      v37, v11
+ 217 move/from16      v8, v21
+ 218 goto/16          +48eh
+ 219 const/16         v0, 82
+ 220 if-ne            v7, v0, +036h
+ 221 const/4          v0, 1
+
+=== CustomPWM;::interceptKeyBeforeDispatching (total 291) ===
+   0 move-object/from16 v1, v20
+   1 move-object/from16 v2, v21
+   2 move-object/from16 v3, v22
+   3 move/from16      v4, v23
+   4 const-wide/16    v5, -2
+   5 invoke-virtual/range v22, Landroid/view/KeyEvent;->getKeyCode()I
+   6 move-result      v7
+   7 invoke-virtual/range v22, Landroid/view/KeyEvent;->getDevice()Landroid/view/InputDevice;
+   8 move-result-object v8
+   9 const/4          v0, 0
+  10 const/4          v9, 0
+  11 const/4          v10, 0
+  12 iget-object      v11, v1, Lcom/android/server/policy/CustomPWM;->mContext Landroid/content/Context;
+  13 invoke-virtual   v11, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
+  14 move-result-object v11
+  15 const-string     v12, "kids_mode"
+  16 const/4          v13, 0
+  17 invoke-static    v11, v12, v13, Landroid/provider/Settings$Global;->getInt(Landroid/content/ContentResolver; Ljava/lang/String; I)I
+  18 move-result      v11
+  19 iget-object      v12, v1, Lcom/android/server/policy/CustomPWM;->mContext Landroid/content/Context;
+  20 invoke-virtual   v12, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
+  21 move-result-object v12
+  22 const-string     v14, "home_key"
+  23 invoke-static    v12, v14, v13, Landroid/provider/Settings$Global;->getInt(Landroid/content/ContentResolver; Ljava/lang/String; I)I
+  24 move-result      v12
+  25 const/4          v14, 1
+  26 if-eqz           v8, +053h
+  27 const-string     v15, "0x%04x"
+  28 new-array        v13, v14, [Ljava/lang/Object;
+  29 invoke-virtual   v8, Landroid/view/InputDevice;->getVendorId()I
+  30 move-result      v14
+  31 invoke-static    v14, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+  32 move-result-object v14
+  33 const/16         v16, 0
+  34 aput-object      v14, v13, v16
+  35 invoke-static    v15, v13, Ljava/lang/String;->format(Ljava/lang/String; [Ljava/lang/Object;)Ljava/lang/String;
+  36 move-result-object v0
+  37 const-string     v13, "0x%04x"
+  38 const/4          v14, 1
+  39 new-array        v15, v14, [Ljava/lang/Object;
+  40 invoke-virtual   v8, Landroid/view/InputDevice;->getProductId()I
+  41 move-result      v14
+  42 invoke-static    v14, Ljava/lang/Integer;->valueOf(I)Ljava/lang/Integer;
+  43 move-result-object v14
+  44 aput-object      v14, v15, v16
+  45 invoke-static    v13, v15, Ljava/lang/String;->format(Ljava/lang/String; [Ljava/lang/Object;)Ljava/lang/String;
+  46 move-result-object v9
+  47 invoke-virtual   v8, Landroid/view/InputDevice;->getName()Ljava/lang/String;
+  48 move-result-object v10
+  49 const-string     v13, "WindowManager,CustomPWM"
+  50 new-instance     v14, Ljava/lang/StringBuilder;
+  51 invoke-direct    v14, Ljava/lang/StringBuilder;-><init>()V
+  52 const-string     v15, "interceptKeyTi vid = "
+  53 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  54 invoke-virtual   v14, v0, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  55 const-string     v15, " pid = "
+  56 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  57 invoke-virtual   v14, v9, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  58 const-string     v15, " devicename = "
+  59 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  60 invoke-virtual   v14, v10, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  61 invoke-virtual   v14, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+  62 move-result-object v14
+  63 invoke-static    v13, v14, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+  64 move-object      v13, v10
+  65 move-object      v10, v9
+  66 move-object      v9, v0
+  67 const-string     v0, "WindowManager,CustomPWM"
+  68 new-instance     v14, Ljava/lang/StringBuilder;
+  69 invoke-direct    v14, Ljava/lang/StringBuilder;-><init>()V
+  70 const-string     v15, "interceptKeyTi keyCode="
+  71 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  72 invoke-virtual   v14, v7, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+  73 const-string     v15, " kids_mode = "
+  74 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  75 invoke-virtual   v14, v11, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+  76 const-string     v15, " forbid_home_key = "
+  77 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  78 invoke-virtual   v14, v12, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+  79 invoke-virtual   v14, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+  80 move-result-object v14
+  81 invoke-static    v0, v14, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+  82 const/4          v0, 3
+  83 const/4          v14, 1
+  84 if-ne            v14, v12, +00eh
+  85 if-ne            v0, v7, +00ch
+  86 const-string     v0, "WindowManager,CustomPWM"
+  87 const-string     v14, "interceptKeyTi in forbid_home_key!"
+  88 invoke-static    v0, v14, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+  89 const-wide/16    v14, -1
+  90 return-wide      v14
+  91 if-ne            v0, v7, +014h
+  92 if-eqz           v2, +012h
+  93 const/4          v0, -1
+  94 invoke-virtual/range v21, Ljava/lang/Object;->toString()Ljava/lang/String;
+  95 move-result-object v14
+  96 const-string     v15, "com.oneplus.tv.android.oobe.MainActivity"
+  97 invoke-virtual   v14, v15, Ljava/lang/String;->indexOf(Ljava/lang/String;)I
+  98 move-result      v14
+  99 if-eq            v0, v14, +005h
+ 100 const-wide/16    v14, -1
+ 101 return-wide      v14
+ 102 const/4          v0, 1
+ 103 if-ne            v0, v11, +027h
+ 104 const/16         v0, 142
+ 105 if-eq            v0, v7, +00ah
+ 106 const/16         v0, 136
+ 107 if-eq            v0, v7, +006h
+ 108 const/16         v0, 133
+ 109 if-ne            v0, v7, +01bh
+ 110 const-string     v0, "WindowManager,CustomPWM"
+ 111 new-instance     v14, Ljava/lang/StringBuilder;
+ 112 invoke-direct    v14, Ljava/lang/StringBuilder;-><init>()V
+ 113 const-string     v15, "interceptKeyTi in kids_mode! so need to forbid keycode: "
+ 114 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 115 invoke-virtual   v14, v7, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+ 116 invoke-virtual   v14, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 117 move-result-object v14
+ 118 invoke-static    v0, v14, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+ 119 const-wide/16    v14, -1
+ 120 return-wide      v14
+ 121 const/4          v0, 1
+ 122 if-ne            v0, v11, +027h
+ 123 const/16         v0, 82
+ 124 if-ne            v0, v7, +023h
+ 125 invoke-virtual/range v22, Landroid/view/KeyEvent;->getFlags()I
+ 126 move-result      v0
+ 127 and-int/lit16    v0, v0, 128
+ 128 if-eqz           v0, +01bh
+ 129 const-string     v0, "WindowManager,CustomPWM"
+ 130 new-instance     v14, Ljava/lang/StringBuilder;
+ 131 invoke-direct    v14, Ljava/lang/StringBuilder;-><init>()V
+ 132 const-string     v15, "interceptKeyTi in kids_mode! so need to forbid keycode: "
+ 133 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 134 invoke-virtual   v14, v7, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+ 135 invoke-virtual   v14, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 136 move-result-object v14
+ 137 invoke-static    v0, v14, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+ 138 const-wide/16    v14, -1
+ 139 return-wide      v14
+ 140 const/16         v0, 286
+ 141 if-ne            v0, v7, +111h
+ 142 invoke-virtual/range v22, Landroid/view/KeyEvent;->getAction()I
+ 143 move-result      v0
+ 144 if-nez           v0, +10bh
+ 145 const-string     v0, "com.tencent.start.tv"
+ 146 const-string/jumbo v14, sys.optv.curpkg
+ 147 invoke-static    v14, Landroid/os/SystemProperties;->get(Ljava/lang/String;)Ljava/lang/String;
+ 148 move-result-object v14
+ 149 invoke-virtual   v0, v14, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 150 move-result      v0
+ 151 if-eqz           v0, +020h
+ 152 const-string     v0, "WindowManager,CustomPWM"
+ 153 new-instance     v14, Ljava/lang/StringBuilder;
+ 154 invoke-direct    v14, Ljava/lang/StringBuilder;-><init>()V
+ 155 const-string     v15, "interceptKeyTi keycode: "
+ 156 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 157 invoke-virtual   v14, v7, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+ 158 const-string     v15, "; Top APP has been com.tencent.start.tv!"
+ 159 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 160 invoke-virtual   v14, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 161 move-result-object v14
+ 162 invoke-static    v0, v14, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+ 163 const-wide/16    v14, -1
+ 164 return-wide      v14
+ 165 iget-object      v0, v1, Lcom/android/server/policy/CustomPWM;->mContext Landroid/content/Context;
+ 166 invoke-virtual   v0, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
+ 167 move-result-object v0
+ 168 const-string     v14, "kids_mode"
+ 169 const/4          v15, 0
+ 170 invoke-static    v0, v14, v15, Landroid/provider/Settings$Global;->getInt(Landroid/content/ContentResolver; Ljava/lang/String; I)I
+ 171 move-result      v0
+ 172 const/4          v14, 1
+ 173 if-ne            v0, v14, +020h
+ 174 const-string     v0, "WindowManager,CustomPWM"
+ 175 new-instance     v14, Ljava/lang/StringBuilder;
+ 176 invoke-direct    v14, Ljava/lang/StringBuilder;-><init>()V
+ 177 const-string     v15, "interceptKeyTi keycode: "
+ 178 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 179 invoke-virtual   v14, v7, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+ 180 const-string     v15, "; and is in kid mode , do not need to start cloud game"
+ 181 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 182 invoke-virtual   v14, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 183 move-result-object v14
+ 184 invoke-static    v0, v14, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+ 185 const-wide/16    v14, -1
+ 186 return-wide      v14
+ 187 const-string     v0, "WindowManager,CustomPWM"
+ 188 new-instance     v14, Ljava/lang/StringBuilder;
+ 189 invoke-direct    v14, Ljava/lang/StringBuilder;-><init>()V
+ 190 const-string     v15, "interceptKeyTi keycode: "
+ 191 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 192 invoke-virtual   v14, v7, Ljava/lang/StringBuilder;->append(I)Ljava/lang/StringBuilder;
+ 193 const-string     v15, "; start com.tencent.start.tv!"
+ 194 invoke-virtual   v14, v15, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 195 invoke-virtual   v14, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 196 move-result-object v14
+ 197 invoke-static    v0, v14, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+ 198 iget-object      v0, v1, Lcom/android/server/policy/CustomPWM;->mContext Landroid/content/Context;
+ 199 invoke-virtual   v0, Landroid/content/Context;->getPackageManager()Landroid/content/pm/PackageManager;
+ 200 move-result-object v14
+ 201 new-instance     v0, Landroid/content/Intent;
+ 202 invoke-direct    v0, Landroid/content/Intent;-><init>()V
+ 203 const-string     v15, "com.tencent.start.tv"
+ 204 invoke-virtual   v14, v15, Landroid/content/pm/PackageManager;->getLaunchIntentForPackage(Ljava/lang/String;)Landroid/content/Intent;
+ 205 move-result-object v15
+ 206 if-eqz           v15, +052h
+ 207 if-eqz           v9, +016h
+ 208 invoke-virtual   v9, Ljava/lang/String;->length()I
+ 209 move-result      v16
+ 210 if-nez           v16, +003h
+ 211 goto             +eh
+ 212 const-string/jumbo v0, vid
+ 213 invoke-virtual   v15, v0, v9, Landroid/content/Intent;->putExtra(Ljava/lang/String; Ljava/lang/String;)Landroid/content/Intent;
+ 214 move-wide/from16 v17, v5
+ 215 goto             +fh
+ 216 move-exception   v0
+ 217 move-wide/from16 v17, v5
+ 218 goto             +33h
+ 219 const-string/jumbo v0, vid
+ 220 move-wide/from16 v17, v5
+ 221 const-string     v5, ""
+ 222 invoke-virtual   v15, v0, v5, Landroid/content/Intent;->putExtra(Ljava/lang/String; Ljava/lang/String;)Landroid/content/Intent;
+ 223 if-eqz           v10, +010h
+ 224 invoke-virtual   v10, Ljava/lang/String;->length()I
+ 225 move-result      v0
+ 226 if-nez           v0, +003h
+ 227 goto             +8h
+ 228 const-string/jumbo v0, pid
+ 229 invoke-virtual   v15, v0, v10, Landroid/content/Intent;->putExtra(Ljava/lang/String; Ljava/lang/String;)Landroid/content/Intent;
+ 230 goto             +9h
+ 231 const-string/jumbo v0, pid
+ 232 const-string     v5, ""
+ 233 invoke-virtual   v15, v0, v5, Landroid/content/Intent;->putExtra(Ljava/lang/String; Ljava/lang/String;)Landroid/content/Intent;
+ 234 const/high16     v0, 268435456
+ 235 invoke-virtual   v15, v0, Landroid/content/Intent;->addFlags(I)Landroid/content/Intent;
+ 236 iget-object      v0, v1, Lcom/android/server/policy/CustomPWM;->mContext Landroid/content/Context;
+ 237 invoke-virtual   v0, v15, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
+ 238 goto             +dh
+ 239 move-exception   v0
+ 240 goto             +4h
+ 241 move-exception   v0
+ 242 move-wide/from16 v17, v5
+ 243 const-string     v5, "WindowManager,CustomPWM"
+ 244 const-string     v6, "failed to start com.tencent.start.tv"
+ 245 invoke-static    v5, v6, v0, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String; Ljava/lang/Throwable;)I
+ 246 goto             +2eh
+ 247 move-wide/from16 v17, v5
+ 248 const-string     v0, "WindowManager,CustomPWM"
+ 249 const-string     v5, "interceptKeyTi pkg com.tencent.start.tv not install! so start playstore!"
+ 250 invoke-static    v0, v5, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+ 251 new-instance     v0, Landroid/content/Intent;
+ 252 const-string     v5, "android.intent.action.VIEW"
+ 253 const-string/jumbo v6, tvmarket://openapi?page=detail&appkey=com.tencent.start.tv
+ 254 invoke-static    v6, Landroid/net/Uri;->parse(Ljava/lang/String;)Landroid/net/Uri;
+ 255 move-result-object v6
+ 256 invoke-direct    v0, v5, v6, Landroid/content/Intent;-><init>(Ljava/lang/String; Landroid/net/Uri;)V
+ 257 move-object      v5, v0
+ 258 const/high16     v0, 268435456
+ 259 invoke-virtual   v5, v0, Landroid/content/Intent;->addFlags(I)Landroid/content/Intent;
+ 260 iget-object      v0, v1, Lcom/android/server/policy/CustomPWM;->mContext Landroid/content/Context;
+ 261 invoke-virtual   v0, v5, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V
+ 262 goto             +bh
+ 263 move-exception   v0
+ 264 const-string     v6, "WindowManager,CustomPWM"
+ 265 move-object/from16 v19, v5
+ 266 const-string     v5, "failed to start playstore!"
+ 267 invoke-static    v6, v5, v0, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String; Ljava/lang/Throwable;)I
+ 268 const-wide/16    v5, -1
+ 269 return-wide      v5
+ 270 move-wide/from16 v17, v5
+ 271 iget-object      v0, v1, Lcom/android/server/policy/CustomPWM;->mQuickModePolicy Lcom/android/server/policy/CustomPWM$QuickModePolicy;
+ 272 invoke-virtual   v0, v2, v3, v4, Lcom/android/server/policy/CustomPWM$QuickModePolicy;->interceptKeyBeforeDispatching(Lcom/android/server/policy/WindowManagerPolicy$WindowState; Landroid/view/KeyEvent; I)J
+ 273 move-result-wide v5
+ 274 const-wide/16    v14, -2
+ 275 cmp-long         v0, v5, v14
+ 276 if-gtz           v0, +008h
+ 277 iget-object      v0, v1, Lcom/android/server/policy/CustomPWM;->mVolumeEventPolicy Lcom/android/server/policy/CustomPWM$VolumeEventPolicy;
+ 278 invoke-virtual   v0, v2, v3, v4, Lcom/android/server/policy/CustomPWM$VolumeEventPolicy;->interceptKeyBeforeDispatching(Lcom/android/server/policy/WindowManagerPolicy$WindowState; Landroid/view/KeyEvent; I)J
+ 279 move-result-wide v5
+ 280 cmp-long         v0, v5, v14
+ 281 if-gtz           v0, +008h
+ 282 iget-object      v0, v1, Lcom/android/server/policy/CustomPWM;->mDisableKeyPolicy Lcom/android/server/policy/CustomPWM$DisableKeyPolicy;
+ 283 invoke-virtual   v0, v2, v3, v4, Lcom/android/server/policy/CustomPWM$DisableKeyPolicy;->interceptKeyBeforeDispatching(Lcom/android/server/policy/WindowManagerPolicy$WindowState; Landroid/view/KeyEvent; I)J
+ 284 move-result-wide v5
+ 285 cmp-long         v0, v5, v14
+ 286 if-gtz           v0, +008h
+ 287 iget-object      v0, v1, Lcom/android/server/policy/CustomPWM;->mCustomKeyPolicy Lcom/android/server/policy/CustomPWM$CustomKeyPolicy;
+ 288 invoke-virtual   v0, v2, v3, v4, Lcom/android/server/policy/CustomPWM$CustomKeyPolicy;->interceptKeyBeforeDispatching(Lcom/android/server/policy/WindowManagerPolicy$WindowState; Landroid/view/KeyEvent; I)J
+ 289 move-result-wide v5
+ 290 return-wide      v5
+
+=== CustomPWM$QuickModePolicy;::interceptKeyBeforeDispatching (total 164) ===
+   0 invoke-virtual   v14, Landroid/view/KeyEvent;->getKeyCode()I
+   1 move-result      v0
+   2 invoke-virtual   v14, Landroid/view/KeyEvent;->getAction()I
+   3 move-result      v1
+   4 const/4          v2, 1
+   5 const/4          v3, 0
+   6 if-nez           v1, +004h
+   7 move             v1, v2
+   8 goto             +2h
+   9 move             v1, v3
+  10 const/4          v4, 3
+  11 const-wide/16    v5, 0
+  12 if-ne            v4, v0, +06ch
+  13 const-string     v7, ""
+  14 const-string/jumbo v8, sys.optv.pip_mode
+  15 invoke-static    v8, v3, Landroid/os/SystemProperties;->getBoolean(Ljava/lang/String; Z)Z
+  16 move-result      v8
+  17 if-eqz           v8, +006h
+  18 const-string/jumbo v7, pip_focus
+  19 goto             +17h
+  20 iget-object      v8, v12, Lcom/android/server/policy/CustomPWM$QuickModePolicy;->this$0 Lcom/android/server/policy/CustomPWM;
+  21 invoke-static    v8, Lcom/android/server/policy/CustomPWM;->access$900(Lcom/android/server/policy/CustomPWM;)Landroid/content/Context;
+  22 move-result-object v8
+  23 invoke-virtual   v8, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
+  24 move-result-object v8
+  25 const-string/jumbo v9, sys.optv.xtc_pip_mode
+  26 invoke-static    v8, v9, v3, Landroid/provider/Settings$Global;->getInt(Landroid/content/ContentResolver; Ljava/lang/String; I)I
+  27 move-result      v8
+  28 if-ne            v8, v2, +005h
+  29 const-string/jumbo v7, xtc_pip_focus
+  30 invoke-static    v7, Landroid/text/TextUtils;->isEmpty(Ljava/lang/CharSequence;)Z
+  31 move-result      v8
+  32 if-nez           v8, +041h
+  33 invoke-virtual   v14, Landroid/view/KeyEvent;->getRepeatCount()I
+  34 move-result      v2
+  35 if-lez           v2, +019h
+  36 const-string     v2, "WindowManager,CustomPWM"
+  37 new-instance     v3, Ljava/lang/StringBuilder;
+  38 invoke-direct    v3, Ljava/lang/StringBuilder;-><init>()V
+  39 const-string     v4, "block KEYCODE_HOME for special app, long press, reason = "
+  40 invoke-virtual   v3, v4, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  41 invoke-virtual   v3, v7, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  42 invoke-virtual   v3, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+  43 move-result-object v3
+  44 invoke-static    v2, v3, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+  45 return-wide      v5
+  46 if-eqz           v1, +00bh
+  47 invoke-static    Landroid/app/ActivityManager;->getService()Landroid/app/IActivityManager;
+  48 move-result-object v2
+  49 invoke-interface v2, v7, Landroid/app/IActivityManager;->closeSystemDialogs(Ljava/lang/String;)V
+  50 goto             +2h
+  51 move-exception   v2
+  52 const-string     v2, "WindowManager,CustomPWM"
+  53 new-instance     v3, Ljava/lang/StringBuilder;
+  54 invoke-direct    v3, Ljava/lang/StringBuilder;-><init>()V
+  55 const-string     v4, "block KEYCODE_HOME for special app, reason = "
+  56 invoke-virtual   v3, v4, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  57 invoke-virtual   v3, v7, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+  58 invoke-virtual   v3, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+  59 move-result-object v3
+  60 invoke-static    v2, v3, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+  61 return-wide      v5
+  62 const/16         v7, 82
+  63 if-ne            v7, v0, +04dh
+  64 const-string/jumbo v7, sys.optv.pip_mode
+  65 invoke-static    v7, v3, Landroid/os/SystemProperties;->getBoolean(Ljava/lang/String; Z)Z
+  66 move-result      v7
+  67 const-wide/16    v8, -1
+  68 const/4          v10, -1
+  69 if-eqz           v7, +018h
+  70 if-eqz           v13, +016h
+  71 invoke-virtual   v13, Ljava/lang/Object;->toString()Ljava/lang/String;
+  72 move-result-object v7
+  73 const-string     v11, "com.heytap.iot.castservice"
+  74 invoke-virtual   v7, v11, Ljava/lang/String;->indexOf(Ljava/lang/String;)I
+  75 move-result      v7
+  76 if-eq            v10, v7, +00ah
+  77 const-string     v2, "WindowManager,CustomPWM"
+  78 const-string     v3, "block KEYCODE_MENU for special app, reason = pip_focus"
+  79 invoke-static    v2, v3, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+  80 return-wide      v8
+  81 iget-object      v7, v12, Lcom/android/server/policy/CustomPWM$QuickModePolicy;->this$0 Lcom/android/server/policy/CustomPWM;
+  82 invoke-static    v7, Lcom/android/server/policy/CustomPWM;->access$900(Lcom/android/server/policy/CustomPWM;)Landroid/content/Context;
+  83 move-result-object v7
+  84 invoke-virtual   v7, Landroid/content/Context;->getContentResolver()Landroid/content/ContentResolver;
+  85 move-result-object v7
+  86 const-string/jumbo v11, sys.optv.xtc_pip_mode
+  87 invoke-static    v7, v11, v3, Landroid/provider/Settings$Global;->getInt(Landroid/content/ContentResolver; Ljava/lang/String; I)I
+  88 move-result      v7
+  89 if-ne            v7, v2, +018h
+  90 if-eqz           v13, +016h
+  91 invoke-virtual   v13, Ljava/lang/Object;->toString()Ljava/lang/String;
+  92 move-result-object v7
+  93 const-string     v11, "com.okii.watch.tv"
+  94 invoke-virtual   v7, v11, Ljava/lang/String;->indexOf(Ljava/lang/String;)I
+  95 move-result      v7
+  96 if-eq            v10, v7, +00ah
+  97 const-string     v2, "WindowManager,CustomPWM"
+  98 const-string     v3, "block KEYCODE_MENU for special app, reason = xtc_pip_focus"
+  99 invoke-static    v2, v3, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+ 100 return-wide      v8
+ 101 if-ne            v0, v4, +077h
+ 102 iget-boolean     v4, v12, Lcom/android/server/policy/CustomPWM$QuickModePolicy;->mNeedCheckHomeKey Z
+ 103 if-ne            v4, v2, +073h
+ 104 iget-object      v4, v12, Lcom/android/server/policy/CustomPWM$QuickModePolicy;->this$0 Lcom/android/server/policy/CustomPWM;
+ 105 invoke-static    v4, Lcom/android/server/policy/CustomPWM;->access$900(Lcom/android/server/policy/CustomPWM;)Landroid/content/Context;
+ 106 move-result-object v4
+ 107 const-string     v7, "activity"
+ 108 invoke-virtual   v4, v7, Landroid/content/Context;->getSystemService(Ljava/lang/String;)Ljava/lang/Object;
+ 109 move-result-object v4
+ 110 check-cast       v4, Landroid/app/ActivityManager;
+ 111 const/16         v7, 100
+ 112 invoke-virtual   v4, v7, Landroid/app/ActivityManager;->getRunningTasks(I)Ljava/util/List;
+ 113 move-result-object v7
+ 114 invoke-interface v7, v3, Ljava/util/List;->get(I)Ljava/lang/Object;
+ 115 move-result-object v8
+ 116 check-cast       v8, Landroid/app/ActivityManager$RunningTaskInfo;
+ 117 iget-object      v8, v8, Landroid/app/ActivityManager$RunningTaskInfo;->baseActivity Landroid/content/ComponentName;
+ 118 invoke-virtual   v8, Landroid/content/ComponentName;->getPackageName()Ljava/lang/String;
+ 119 move-result-object v8
+ 120 const-string     v9, "com.opos.ott"
+ 121 invoke-virtual   v8, v9, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 122 move-result      v8
+ 123 if-eqz           v8, +00ah
+ 124 const-string     v2, "WindowManager,CustomPWM"
+ 125 const-string     v3, "Passing Homekey to bootvideo"
+ 126 invoke-static    v2, v3, Landroid/util/Slog;->d(Ljava/lang/String; Ljava/lang/String;)I
+ 127 return-wide      v5
+ 128 const/4          v5, 0
+ 129 nop              
+ 130 invoke-interface v7, Ljava/util/List;->size()I
+ 131 move-result      v6
+ 132 if-ge            v2, v6, +01bh
+ 133 invoke-interface v7, v2, Ljava/util/List;->get(I)Ljava/lang/Object;
+ 134 move-result-object v6
+ 135 check-cast       v6, Landroid/app/ActivityManager$RunningTaskInfo;
+ 136 iget-object      v8, v6, Landroid/app/ActivityManager$RunningTaskInfo;->baseActivity Landroid/content/ComponentName;
+ 137 invoke-virtual   v8, Landroid/content/ComponentName;->getPackageName()Ljava/lang/String;
+ 138 move-result-object v8
+ 139 const-string     v9, "com.opos.ott"
+ 140 invoke-virtual   v8, v9, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+ 141 move-result      v8
+ 142 if-eqz           v8, +004h
+ 143 const/4          v5, 1
+ 144 goto             +4h
+ 145 add-int/lit8     v2, v2, 1
+ 146 goto             -1eh
+ 147 if-nez           v5, +004h
+ 148 iput-boolean     v3, v12, Lcom/android/server/policy/CustomPWM$QuickModePolicy;->mNeedCheckHomeKey Z
+ 149 goto             +1ch
+ 150 move-exception   v2
+ 151 const-string     v3, "WindowManager,CustomPWM"
+ 152 new-instance     v4, Ljava/lang/StringBuilder;
+ 153 invoke-direct    v4, Ljava/lang/StringBuilder;-><init>()V
+ 154 const-string     v5, "Passing Homekey to bootvideo failed!"
+ 155 invoke-virtual   v4, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 156 invoke-virtual   v2, Ljava/lang/Exception;->getMessage()Ljava/lang/String;
+ 157 move-result-object v5
+ 158 invoke-virtual   v4, v5, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;
+ 159 invoke-virtual   v4, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;
+ 160 move-result-object v4
+ 161 invoke-static    v3, v4, Landroid/util/Slog;->e(Ljava/lang/String; Ljava/lang/String;)I
+ 162 const-wide/16    v2, -2
+ 163 return-wide      v2

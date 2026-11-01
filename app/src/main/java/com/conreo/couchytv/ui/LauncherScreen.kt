@@ -214,7 +214,7 @@ private fun android.content.Context.findActivity(): android.app.Activity? {
     androidx.compose.ui.ExperimentalComposeUiApi::class,
 )
 @Composable
-fun LauncherApp(rescanTick: Int) {
+fun LauncherApp(rescanTick: Int, appListTick: Int = 0, homeTick: Int = 0) {
     val context = LocalContext.current
     val store = remember { ConfigStore(context.applicationContext) }
     val scope = rememberCoroutineScope()
@@ -423,6 +423,52 @@ fun LauncherApp(rescanTick: Int) {
 
     var dockExpanded by remember { mutableStateOf(false) }
     LaunchedEffect(config.layout) { if (config.layout != LAYOUT_DOCK) dockExpanded = false }
+
+    // The remote's "app" key never arrives as a KeyEvent — this firmware folds it
+    // into the HOME branch and marks the HOME intent with a private category
+    // instead (see MainActivity.isAppListIntent). The activity turns that into two
+    // counters; here they drive the dock grid, matching the stock launcher, where
+    // the home key shows the home page and the app key shows the app list.
+    //
+    // `seen` starts at 0 — the value a plain-HOME launch carries — so an ordinary
+    // boot skips the effect and leaves the grid closed, while a cold start from the
+    // app key (appListTick == 1) does open it. That is why `seen` is not seeded
+    // from appListTick.
+    //
+    // The press is latched rather than applied on the spot: a cold start runs this
+    // effect long before the app scan has anything to show, and opening the grid
+    // then would be a silent no-op (empty list) with no retry.
+    var appListRequested by remember { mutableStateOf(false) }
+    var seenAppListTick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(appListTick) {
+        if (appListTick == seenAppListTick) return@LaunchedEffect
+        seenAppListTick = appListTick
+        appListRequested = true
+    }
+    // Applies the latched request as soon as there is something to show. Re-runs
+    // whenever the list or the pending request changes, so a cold start that
+    // finishes scanning a second later still lands on the app list.
+    LaunchedEffect(appListRequested, dockList.items.size, config.layout) {
+        if (!appListRequested || dockList.items.isEmpty()) return@LaunchedEffect
+        appListRequested = false
+        if (config.layout != LAYOUT_DOCK) return@LaunchedEffect
+        // Never yank the grid out from under a dialog or while the user is
+        // rearranging icons — dropping that state would strand the move.
+        if (showSettings || movePkg != null || menuFor != null) return@LaunchedEffect
+        dockExpanded = true
+    }
+
+    var seenHomeTick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(homeTick) {
+        if (homeTick == seenHomeTick) return@LaunchedEffect
+        seenHomeTick = homeTick
+        // The home key outranks a pending app-list press: pressing home while the
+        // grid is still loading must leave the user on the home page.
+        appListRequested = false
+        if (config.layout != LAYOUT_DOCK) return@LaunchedEffect
+        if (showSettings || movePkg != null || menuFor != null) return@LaunchedEffect
+        dockExpanded = false
+    }
 
     // ----- move-mode helpers -----
     fun findMoving(): Triple<Int, List<AppEntry>, Int>? {
@@ -846,6 +892,8 @@ fun LauncherApp(rescanTick: Int) {
                 focus = shelfFocus,
                 anchor = shelfAnchor,
                 enabled = shelfEnabled,
+                // Opt-in, and only meaningful while the shelf itself is on.
+                doubanEnabled = shelfEnabled && config.shelfDoubanMeta,
                 // The expanded dock grid, move mode and the overlay dialogs own
                 // the screen — no point fetching or animating pictures behind them.
                 suppressed = movePkg != null || showSettings || menuFor != null,
