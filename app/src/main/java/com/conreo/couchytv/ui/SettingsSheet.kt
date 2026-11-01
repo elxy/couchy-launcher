@@ -611,6 +611,17 @@ private fun DisplayScreen(
                 supportingContent = { Text(stringResource(R.string.shelf_sub)) },
                 trailingContent = { CheckMark(checked = config.shelfEnabled) },
             )
+            // Nested under the shelf: pointless while the shelf is off, and it is
+            // the only switch that sends data to a second host (Douban).
+            if (config.shelfEnabled) {
+                SettingsItem(
+                    selected = false,
+                    onClick = { update { it.copy(shelfDoubanMeta = !it.shelfDoubanMeta) } },
+                    headlineContent = { Text(stringResource(R.string.shelf_douban_label)) },
+                    supportingContent = { Text(stringResource(R.string.shelf_douban_sub)) },
+                    trailingContent = { CheckMark(checked = config.shelfDoubanMeta) },
+                )
+            }
         }
         SectionLabel(stringResource(R.string.section_size))
         run {

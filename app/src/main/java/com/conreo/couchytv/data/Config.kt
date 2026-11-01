@@ -81,6 +81,11 @@ data class LauncherConfig(
      *  Youku) is focused in the dock, show its hot titles above the icons
      *  (fetches their public web pages — see data/Shelf.kt). */
     val shelfEnabled: Boolean = true,
+    /** Ask Douban for 品类 / 简介 / 演员 / 评分 of the card on screen. Off by
+     *  default: it sends the title being looked at to a second host
+     *  (movie.douban.com + m.douban.com). Failure is silent — the caption keeps
+     *  what the streaming service itself returned. See data/DoubanMeta.kt. */
+    val shelfDoubanMeta: Boolean = false,
     /** Keep the process resident with a foreground service, so returning from
      *  another app resumes instead of cold-starting. Off by default: it costs a
      *  permanent notification and resident memory, and most devices do not need

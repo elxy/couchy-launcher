@@ -199,4 +199,6 @@
     <string name="shelf_tencent">Tencent Video · Popolari</string>
     <string name="shelf_youku">Youku · Popolari</string>
     <string name="shelf_hint">↑ Comandi · ↓ Torna all\'app · OK Riproduci</string>
+    <string name="shelf_douban_label">Dettagli Douban</string>
+    <string name="shelf_douban_sub">Aggiunge genere, trama, cast e il voto di Douban al titolo mostrato. Invia quel titolo a movie.douban.com e m.douban.com.</string>
 </resources>

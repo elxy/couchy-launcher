@@ -67,6 +67,8 @@ The Bing daily photo wallpaper is **opt-in and off by default**. When enabled, t
 
 The Top Shelf is **on by default** and only ever reads public listing pages: Bilibili's popular-videos JSON, Douyu's live-room JSON, iQIYI's recommendation rail, Tencent Video's channel page and Youku's home page. The TV fetches them directly — no account, no cookies, no playback history, nothing uploaded. It fires only while one of those apps is focused, and each result is cached for 15 minutes. Clicking a title hands the id in the listing to the app's own deep-link scheme (Bilibili, iQIYI, Tencent Video, Youku) — nothing besides that id leaves the TV. Turn it off in **Settings › Display › Top Shelf** for a fully offline launcher.
 
+**Douban details** (off by default) is a second, separate switch under it. When on, the card on screen additionally gets its genre, synopsis, cast and Douban rating: the title is sent to `movie.douban.com` (to find the entry) and `m.douban.com` (to read it) — no account, no cookie, no device id, and only for the one title being shown, never for the whole list. Douban's answer is discarded unless the platform's own programme id for that card appears in Douban's source list, so a wrong match cannot rewrite the caption. Every failure is silent: the card keeps the genre and synopsis its streaming service already published. Turning it off restores exactly that.
+
 ---
 
 ## Requirements
@@ -246,6 +248,7 @@ https://github.com/user-attachments/assets/6f21913e-1948-4543-9983-64dc68c602fa
 - **分区**可自行重命名、排序、填充；一个应用可归入多个分区。新安装的应用进入第一个分区。
 - **壁纸**——渐变、你自己的照片、循环视频，或可选的内置航拍视频（Apple / Amazon / 社区，仅在开启时才联网），带速度控制与淡入淡出。
 - **顶部内容（Top Shelf）**——选中 Dock 里的视频应用时，上半屏轮播它的热门剧照：**哔哩哔哩**（热门视频）、**斗鱼**（正在直播）、**爱奇艺**、**腾讯视频**、**优酷**。每个服务都取它发布的最高清版本（爱奇艺最高 2560×1440，哔哩哔哩 / 优酷 1920×1080），4K 电视上依然清晰。按**上键**即可浏览这些剧照：**左右键**切换，**OK 通过该应用公开的 schema 直接打开/播放**，**下键**回到 Dock。内容来自各服务的公开网页接口，可在「设置 → 显示 → 顶部内容」关闭。
+- **豆瓣详情**（默认关闭，位于上方开关之下）——开启后，屏幕上的那一张卡片会额外显示品类、简介、演员和**豆瓣评分**（不显示各平台自己的评分）。只有当前正显示的一张会查询，不会遍历整个列表。实现上用片名去 `movie.douban.com` 找条目，再到 `m.douban.com` 读详情；不带账号、Cookie 或设备标识。匹配时要求豆瓣自己给出的播放源里出现该卡片对应的节目 ID，否则丢弃豆瓣结果——因此不会因重名改错文案。任何失败都静默回退到该平台原本提供的信息。
 - **可调**图标大小、间距、圆角、界面缩放、暗化，以及可选的玻璃状态栏面板。
 - **保存与加载**完整配置——分类、布局、壁纸及所有设置导出为 JSON 文件。
 - **18 种语言**（另加英文），在启动器设置中可选择语言。

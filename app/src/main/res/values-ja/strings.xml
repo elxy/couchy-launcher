@@ -199,4 +199,6 @@
     <string name="shelf_tencent">テンセントビデオ · 人気</string>
     <string name="shelf_youku">優酷 · 人気</string>
     <string name="shelf_hint">↑ コントロール · ↓ アプリに戻る · OK 再生</string>
+    <string name="shelf_douban_label">豆瓣の詳細</string>
+    <string name="shelf_douban_sub">表示中の作品にジャンル・あらすじ・出演者・豆瓣の評価を追加します。作品名を豆瓣（movie.douban.com、m.douban.com）へ送信します。</string>
 </resources>

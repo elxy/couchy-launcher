@@ -213,4 +213,6 @@
     <string name="shelf_tencent">Tencent Video · Populaire</string>
     <string name="shelf_youku">Youku · Populaire</string>
     <string name="shelf_hint">↑ Commandes · ↓ Retour à l\'appli · OK Lecture</string>
+    <string name="shelf_douban_label">Détails Douban</string>
+    <string name="shelf_douban_sub">Ajoute le genre, le synopsis, la distribution et la note Douban au titre affiché. Envoie ce titre à movie.douban.com et m.douban.com.</string>
 </resources>

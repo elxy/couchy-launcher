@@ -199,4 +199,6 @@
     <string name="shelf_tencent">Tencent Video · Populair</string>
     <string name="shelf_youku">Youku · Populair</string>
     <string name="shelf_hint">↑ Bediening · ↓ Terug naar app · OK Afspelen</string>
+    <string name="shelf_douban_label">Douban-details</string>
+    <string name="shelf_douban_sub">Voegt genre, samenvatting, cast en de Douban-score toe aan de getoonde titel. Stuurt die titel naar movie.douban.com en m.douban.com.</string>
 </resources>

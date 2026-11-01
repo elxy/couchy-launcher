@@ -199,4 +199,6 @@
     <string name="shelf_tencent">Tencent Video · الشائع</string>
     <string name="shelf_youku">Youku · الشائع</string>
     <string name="shelf_hint">↑ التحكم · ↓ العودة إلى التطبيق · OK تشغيل</string>
+    <string name="shelf_douban_label">تفاصيل Douban</string>
+    <string name="shelf_douban_sub">يضيف النوع والملخص والممثلين وتقييم Douban إلى العنوان المعروض. يرسل ذلك العنوان إلى movie.douban.com وm.douban.com.</string>
 </resources>

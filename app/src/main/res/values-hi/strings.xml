@@ -199,4 +199,6 @@
     <string name="shelf_tencent">Tencent Video · लोकप्रिय</string>
     <string name="shelf_youku">Youku · लोकप्रिय</string>
     <string name="shelf_hint">↑ नियंत्रण · ↓ ऐप पर वापस · OK चलाएँ</string>
+    <string name="shelf_douban_label">डॉबन विवरण</string>
+    <string name="shelf_douban_sub">दिखाए जा रहे शीर्षक में शैली, सारांश, कलाकार और डॉबन रेटिंग जोड़ता है। वह शीर्षक movie.douban.com और m.douban.com पर भेजता है।</string>
 </resources>

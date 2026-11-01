@@ -3,6 +3,9 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
+    // Renders Compose screens on the JVM (layoutlib) so UI variants can be
+    // reviewed as PNGs without a TV, an emulator or a device.
+    id("app.cash.paparazzi")
 }
 
 android {
@@ -13,8 +16,8 @@ android {
         applicationId = "com.conreo.couchytv"
         minSdk = 21
         targetSdk = 34
-        versionCode = 7
-        versionName = "1.0.6"
+        versionCode = 8
+        versionName = "1.0.7"
 
         // Optional ABI restriction for local single-arch builds:
         //   ./gradlew assembleDebug -Pabi=armeabi-v7a
@@ -111,4 +114,7 @@ dependencies {
     implementation("androidx.media3:media3-datasource-okhttp:1.4.1")
 
     testImplementation("junit:junit:4.13.2")
+    // Renders Compose screens on the JVM, so UI proposals can be reviewed as
+    // PNGs without a device (see test/…/ui/ShelfMetaPreviewTest.kt).
+    testImplementation("app.cash.paparazzi:paparazzi")
 }

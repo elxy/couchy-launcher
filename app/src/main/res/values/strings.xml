@@ -216,4 +216,6 @@
     <string name="shelf_tencent">Tencent Video · Hot</string>
     <string name="shelf_youku">Youku · Hot</string>
     <string name="shelf_hint">↑ Controls · ↓ Back to app · OK Play</string>
+    <string name="shelf_douban_label">Douban details</string>
+    <string name="shelf_douban_sub">Adds genre, synopsis, cast and the Douban rating to the card on screen. Sends that title to movie.douban.com and m.douban.com.</string>
 </resources>

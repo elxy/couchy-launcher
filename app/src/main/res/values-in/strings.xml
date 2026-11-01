@@ -199,4 +199,6 @@
     <string name="shelf_tencent">Tencent Video · Populer</string>
     <string name="shelf_youku">Youku · Populer</string>
     <string name="shelf_hint">↑ Kontrol · ↓ Kembali ke aplikasi · OK Putar</string>
+    <string name="shelf_douban_label">Detail Douban</string>
+    <string name="shelf_douban_sub">Menambahkan genre, sinopsis, pemain, dan rating Douban ke judul yang ditampilkan. Mengirim judul itu ke movie.douban.com dan m.douban.com.</string>
 </resources>

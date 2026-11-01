@@ -199,4 +199,6 @@
     <string name="shelf_tencent">Tencent Video · Nổi bật</string>
     <string name="shelf_youku">Youku · Nổi bật</string>
     <string name="shelf_hint">↑ Điều khiển · ↓ Quay lại ứng dụng · OK Phát</string>
+    <string name="shelf_douban_label">Chi tiết Douban</string>
+    <string name="shelf_douban_sub">Thêm thể loại, tóm tắt, diễn viên và điểm Douban cho tiêu đề đang hiển thị. Gửi tiêu đề đó tới movie.douban.com và m.douban.com.</string>
 </resources>

@@ -54,6 +54,19 @@ object Shelf {
          * keeps the shelf display-only for those apps.
          */
         val play: String? = null,
+        // ----- fields the listing itself already carries (free, no extra call) -----
+        /** Genre words the service tags the title with, e.g. ["悬疑", "犯罪"]. */
+        val genres: List<String> = emptyList(),
+        /** Full synopsis, as long as the service publishes it. */
+        val intro: String = "",
+        /** Cast names, in the service's own order. */
+        val cast: List<String> = emptyList(),
+        /**
+         * Programme ids this card would hand to its app (`cid`/`aid`/`showid`).
+         * Used to confirm which Douban subject the card is — see DoubanMeta.
+         * Empty means "cannot be matched" (Bilibili UGC, Douyu live).
+         */
+        val programIds: List<String> = emptyList(),
     )
 
     /** [interactive]: the source yields [Item.play] links, so the shelf can be
@@ -271,6 +284,10 @@ object Shelf {
                 // Largest rendition Bilibili keeps for a cover: 1920×1080.
                 image = v.optString("pic").replace("http://", "https://") + "@1920w_1080h_1c.jpg",
                 play = bilibiliPlay(v),
+                // UGC: a partition name and the uploader's own blurb. No cast, and
+                // no Douban subject to match — programIds stays empty.
+                genres = listOf(v.optString("tname")).filter { it.isNotEmpty() },
+                intro = v.optString("desc").trim(),
             )
         }
     }
@@ -308,10 +325,16 @@ object Shelf {
                 val title = v.optString("title").ifEmpty { return@mapNotNull null }
                 // Landscape renditions only: image_cover / back_image fall back to a
                 // portrait 120×160 still, which looks terrible blown up to 4K.
+                //
+                // `img_size=_2560_1440` is only honoured for SOME entries: the rest
+                // come back as the default 120×160 portrait preview, which
+                // Shelf.decode() rejects (min width 480) and the card then cannot be
+                // drawn at all. Appending the rendition suffix explicitly fixes it —
+                // measured on 11 entries: 2 usable before, 10 after.
                 val img = sequenceOf("image_url_normal", "banner_image_url")
                     .map { v.optString(it) }
                     .firstOrNull { it.isNotEmpty() }
-                    ?.replaceFirst(Regex("\\.avif$"), ".jpg")
+                    ?.let(::landscapeIqiyi)
                     ?: return@mapNotNull null
                 val tags = v.optString("tag").split(';').filter { it.isNotEmpty() }.take(2)
                 val score = v.optDouble("sns_score", 0.0)
@@ -322,6 +345,20 @@ object Shelf {
                         .joinToString(" · "),
                     image = img.replace("http://", "https://"),
                     play = iqiyiPlay(v, pkg),
+                    // Everything below is already in this response — no extra call.
+                    // iQIYI's `tag` is a long tail (悬疑;犯罪;罪案;警匪;网剧;内地;普通话;…):
+                    // the leading words are the genres, the rest is audience/topic noise.
+                    genres = v.optString("tag").split(';')
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() && it !in IQIYI_NOISE }
+                        .distinct()
+                        .take(3),
+                    intro = v.optString("description").ifEmpty { v.optString("desc") }.trim(),
+                    cast = actorNames(v),
+                    // iQIYI may list the album (series) id, the single video id, or
+                    // both; Douban's `aid` is the album, so the album id comes first.
+                    programIds = listOf(v.optString("album_id"), v.optString("tv_id"))
+                        .filter { it.isNotEmpty() },
                 )
             }
             .distinctBy { it.title }
@@ -393,6 +430,15 @@ object Shelf {
                                     .joinToString(" · "),
                                 image = img.replace("http://", "https://"),
                                 play = tencentPlay(p),
+                                // Tencent's channel cards carry one genre word and a
+                                // region — no synopsis, no cast. This is exactly the
+                                // case the Douban lookup exists for.
+                                genres = listOf(p.optString("main_genre"))
+                                    .filter { it.isNotEmpty() },
+                                // The `cid` the card launches with; Douban's
+                                // vendors[].uri carries the same one.
+                                programIds = listOf(p.optString("cid"))
+                                    .filter { it.isNotEmpty() },
                             )
                         )
                     }
@@ -442,9 +488,79 @@ object Shelf {
                     meta = v.optString("desc").let { if (it.length > 42) it.take(42) + "…" else it },
                     image = v.optString("hImg").replace("http://", "https://"),
                     play = youkuPlay(v),
+                    // `tags[].text.title` leads with the content type (电影/电视剧/
+                    // 少儿/动漫) and then badges (首播/VIP); `desc` is the synopsis.
+                    genres = youkuGenres(v),
+                    intro = v.optString("desc").trim(),
+                    // Youku's own show id — the id its deep link uses.
+                    programIds = youkuProgramIds(v),
                 )
             }
             .toList()
+    }
+
+    /**
+     * The 2560×1440 rendition of an iQIYI still.
+     *
+     * iQIYI serves `.avif` (undecodable below Android 12, hence the `.jpg` twin)
+     * and ignores `img_size` for part of its catalogue, answering with a 120×160
+     * portrait preview instead. The rendition is addressable by suffix, so ask for
+     * it directly rather than hoping the parameter took effect.
+     */
+    internal fun landscapeIqiyi(raw: String): String {
+        val jpg = raw.replaceFirst(Regex("\\.avif$"), ".jpg").replace("http://", "https://")
+        if (IQIYI_SIZE in jpg) return jpg
+        val dot = jpg.lastIndexOf('.')
+        if (dot <= 0) return jpg
+        return jpg.substring(0, dot) + IQIYI_SIZE + jpg.substring(dot)
+    }
+
+    private const val IQIYI_SIZE = "_2560_1440"
+
+    /** iQIYI `tag` is a semicolon list; the first words are genres, the rest is
+     *  audience/topic noise (内地, 普通话, 群像, 院线…) that means nothing at 10 ft. */
+    private val IQIYI_NOISE = setOf(
+        "内地", "普通话", "群像", "院线", "网络电影", "网剧", "未来", "社会",
+        "正能量", "自由", "震撼", "勇气", "感动", "燃", "热血", "真实人物改编",
+    )
+
+    /** Cast names from iQIYI's `starring` (leads) and `actor` (supporting). */
+    private fun actorNames(v: JSONObject): List<String> {
+        val out = ArrayList<String>()
+        for (key in listOf("starring", "actor")) {
+            val array = v.optJSONArray(key) ?: continue
+            for (i in 0 until array.length()) {
+                val name = array.optJSONObject(i)?.optString("name")?.trim().orEmpty()
+                if (name.isNotEmpty() && name !in out) out.add(name)
+            }
+        }
+        return out
+    }
+
+    /** Content type from Youku's tag pills (电影 / 电视剧 / 少儿 / 动漫…). */
+    private fun youkuGenres(v: JSONObject): List<String> {
+        val tags = v.optJSONArray("tags") ?: return emptyList()
+        return (0 until tags.length())
+            .mapNotNull { i ->
+                tags.optJSONObject(i)?.optJSONObject("text")?.optString("title")?.trim()
+                    ?.takeIf { it.isNotEmpty() && it in YOUKU_TYPES }
+            }
+            .distinct()
+    }
+
+    private val YOUKU_TYPES = setOf(
+        "电影", "电视剧", "综艺", "动漫", "少儿", "纪录片", "体育", "游戏", "资讯",
+    )
+
+    /** The show id Youku's deep link is built from (see [youkuPlay]). */
+    private fun youkuProgramIds(v: JSONObject): List<String> {
+        val action = v.optJSONObject("action")
+        val showId = action?.optJSONObject("extra")?.optLong("showId", 0L) ?: 0L
+        val itemId = v.optLong("id", 0L)
+        return listOf(showId, itemId)
+            .filter { it > 0L }
+            .map { it.toString() }
+            .distinct()
     }
 
     /** Index just past the `]` that closes the array starting at [start]. */

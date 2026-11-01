@@ -199,4 +199,6 @@
     <string name="shelf_tencent">Tencent Video · Popüler</string>
     <string name="shelf_youku">Youku · Popüler</string>
     <string name="shelf_hint">↑ Kontroller · ↓ Uygulamaya dön · OK Oynat</string>
+    <string name="shelf_douban_label">Douban ayrıntıları</string>
+    <string name="shelf_douban_sub">Gösterilen başlığa tür, özet, oyuncular ve Douban puanını ekler. Bu başlığı movie.douban.com ve m.douban.com adreslerine gönderir.</string>
 </resources>

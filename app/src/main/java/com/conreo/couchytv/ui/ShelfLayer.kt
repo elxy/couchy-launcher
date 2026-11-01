@@ -33,6 +33,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -57,8 +58,16 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import com.conreo.couchytv.R
+import com.conreo.couchytv.data.DoubanMeta
 import com.conreo.couchytv.data.Shelf
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import java.util.Locale
 
 /**
  * Which app is currently focused on the home screen. Written by [AppCard] on
@@ -138,6 +147,16 @@ private const val SHELF_SECONDS = 8
 private const val FOCUS_SETTLE_MS = 350L
 
 /**
+ * Longest the caption waits for Douban before being drawn with the streaming
+ * service's own fields. One lookup measures ~0.9 s (suggest ~250 ms, 350 ms
+ * pacing, detail ~600 ms); a disk-cache hit returns in ~0.
+ */
+private const val DOUBAN_BUDGET_MS = 2500L
+
+/** The still's crossfade. A caption settled inside it is published invisibly. */
+private const val SHELF_FADE_MS = 700L
+
+/**
  * Top Shelf: while a dock app with a shelf source (Bilibili, Douyu, iQIYI,
  * Tencent Video, Youku) is focused, its hot titles replace the wallpaper behind
  * the dock, with the title above the icons. Ported from the Tigris launcher.
@@ -156,6 +175,8 @@ fun ShelfLayer(
     focus: ShelfFocus,
     anchor: ShelfAnchor,
     enabled: Boolean,
+    /** Opt-in Douban enrichment of the caption (see LauncherConfig). */
+    doubanEnabled: Boolean,
     /** Full-screen takeover (move mode): the stills leave the screen entirely. */
     suppressed: Boolean,
     /**
@@ -246,6 +267,7 @@ fun ShelfLayer(
                 scrim = scrim,
                 anchor = anchor,
                 mode = mode,
+                doubanEnabled = doubanEnabled,
                 // Behind the drawer only the picture remains: its text belongs
                 // to the dock band, which the grid covers.
                 showInfo = !drawerOpen,
@@ -274,6 +296,7 @@ private fun ShelfContent(
     scrim: Brush?,
     anchor: ShelfAnchor,
     mode: ShelfUi,
+    doubanEnabled: Boolean,
     showInfo: Boolean,
     drawerOpen: Boolean,
     browseFocus: FocusRequester,
@@ -283,7 +306,12 @@ private fun ShelfContent(
 ) {
     val ctx = LocalContext.current
     var items by remember(pkg) { mutableStateOf<List<Shelf.Item>>(emptyList()) }
-    var shown by remember(pkg) { mutableStateOf<Pair<Shelf.Item, Bitmap>?>(null) }
+    // The still AND its caption, as one unit. They used to be published
+    // separately (picture in `shown`, caption in `mode.meta`), which is exactly why
+    // a card could appear with the platform caption and then widen: the two had
+    // independent lives. Fusing them makes that impossible — the Crossfade below
+    // swaps a whole card at once.
+    var shown by remember(pkg) { mutableStateOf<Card?>(null) }
 
     val browsing = mode.active
     val index = if (items.isEmpty()) 0 else mode.index.coerceIn(0, items.lastIndex)
@@ -304,18 +332,94 @@ private fun ShelfContent(
         if (items.isNotEmpty() && mode.index > items.lastIndex) mode.index = 0
     }
 
-    // Draw whatever [index] points at; warm the next still while we're here.
-    LaunchedEffect(index, items) {
+    // Picture and caption are settled separately, on purpose:
+    //
+    //  • the still is published as soon as it is decoded — the user is watching
+    //    the picture, and holding it back would show the wallpaper instead;
+    // Both parts are settled BEFORE the card is published, and in parallel:
+    // the still (0.2 s cached / 2.4 s cold) and the Douban answer (0 s cached /
+    // 0.9 s cold). Publishing them as one [Card] is what removes the flicker —
+    // the caption and the picture enter the Crossfade together, so a card can
+    // never be drawn platform-only and widened a moment later.
+    //
+    /**
+     * Remove a card that cannot be drawn from the rotation, so the page dots count
+     * only pictures that actually exist. [key] is the failed card's identity; the
+     * index is clamped, which naturally lands on the neighbour.
+     */
+    fun dropUndrawable(key: String) {
+        // Never empty the shelf: with every still undrawable the launcher is better
+        // off showing nothing over the wallpaper (which `shown == null` already
+        // does) than cycling through removals one dot at a time.
+        if (items.size <= 1) return
+        val filtered = items.filterNot { itemKey(it) == key }
+        if (filtered.size == items.size) return
+        items = filtered
+        mode.items = filtered
+        mode.index = if (filtered.isEmpty()) 0 else mode.index.coerceIn(0, filtered.lastIndex)
+    }
+
+    // Keyed on the card's identity, NOT on the `items` list: that list is a fresh
+    // instance on every fetch, so including it re-ran this effect for the same card
+    // and asked Douban twice — which is what exhausted the per-minute budget on
+    // the first rotation.
+    val cardKey = items.getOrNull(index)?.let { itemKey(it) }
+    LaunchedEffect(cardKey, pkg, doubanEnabled) {
         val item = items.getOrNull(index) ?: return@LaunchedEffect
-        val bmp = Shelf.image(ctx, item) ?: return@LaunchedEffect
-        shown = item to bmp
-        items.getOrNull((index + 1) % items.size)?.let { Shelf.image(ctx, it) }
+        val key = cardKey ?: return@LaunchedEffect
+
+        val platform = DoubanMeta.platformOfPackage(pkg)
+        val wanted = doubanEnabled && platform != null && item.programIds.isNotEmpty()
+
+        // Concurrent, not sequential: waiting for Douban and then the image would
+        // add the two together (~3.3 s on a cold card) where the real cost is the
+        // slower of the two.
+        val metaDeferred: Deferred<DoubanMeta.Meta?>? =
+            if (wanted) async { lookupInto(platform!!, item, key, ctx) } else null
+        val bmp = Shelf.image(ctx, item) ?: run {
+            metaDeferred?.cancel()
+            // This card cannot be drawn (the service published only a thumbnail,
+            // or the CDN is gone). Leaving it in the list would keep its page dot
+            // while `shown` still holds the previous picture — the shelf then
+            // shows N dots for fewer distinct stills, and the same still appears
+            // to own two dots. Drop it and let the shelf settle on its neighbour.
+            dropUndrawable(key)
+            return@LaunchedEffect
+        }
+        // The caption is the cheaper half, so by now it is usually already done;
+        // when it is not, this bounds the D-pad latency to one lookup.
+        val meta: DoubanMeta.Meta? =
+            metaDeferred?.let { d -> withTimeoutOrNull(DOUBAN_BUDGET_MS) { d.await() } }
+
+        shown = Card(item, bmp, meta)
+
+        // Warm the NEXT card while this one is on screen — including its Douban
+        // answer. The rotation gives us SHELF_SECONDS (8 s) of headroom, far more
+        // than the ~0.9 s a lookup costs, so the next switch finds everything
+        // ready and never has to wait or flush the caption in late.
+        //
+        // Guarded by the same per-minute budget as the visible card: when it is
+        // exhausted this silently does nothing and the next card simply shows its
+        // platform caption until a later rotation picks it up.
+        val next = items.getOrNull((index + 1) % items.size)
+        if (next != null) {
+            Shelf.image(ctx, next)
+            if (doubanEnabled && !browsing) {
+                val nextKey = itemKey(next)
+                val nextPlatform = DoubanMeta.platformOfPackage(pkg)
+                if (nextPlatform != null && next.programIds.isNotEmpty() &&
+                    !DoubanMeta.isCached(ctx, nextPlatform, next.programIds.first(), next.title)
+                ) {
+                    lookupInto(nextPlatform, next, nextKey, ctx)
+                }
+            }
+        }
     }
 
     // Rotate — but never underneath the user's fingers, and never while the
     // expanded dock grid is open: the still is the grid's backdrop there, so
     // swapping it every 8 s would flip the wallpaper behind an open drawer.
-    LaunchedEffect(items, browsing, drawerOpen) {
+    LaunchedEffect(mode.itemsPkg, items.size, browsing, drawerOpen) {
         if (browsing || drawerOpen || items.size < 2) return@LaunchedEffect
         while (true) {
             delay(SHELF_SECONDS * 1000L)
@@ -351,7 +455,7 @@ private fun ShelfContent(
         )
         // The still crossfades under the dock. Nothing is drawn until the first
         // picture is ready, so a failed fetch leaves the wallpaper untouched.
-        Crossfade(targetState = shown, animationSpec = tween(700), label = "shelfPic") { state ->
+        Crossfade(targetState = shown, animationSpec = tween(SHELF_FADE_MS.toInt()), label = "shelfPic") { state ->
             if (state != null) {
                 // Settle from a slight zoom, like a camera coming to rest —
                 // but only when the USER changed the picture (Left/Right while
@@ -366,7 +470,7 @@ private fun ShelfContent(
                     label = "shelfZoom",
                 )
                 Image(
-                    bitmap = state.second.asImageBitmap(),
+                    bitmap = state.bitmap.asImageBitmap(),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -430,28 +534,31 @@ private fun ShelfContent(
                 .fillMaxWidth(0.72f),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Crossfade(targetState = shown?.first, animationSpec = tween(450), label = "shelfText") { item ->
-                if (item == null) {
+            val card = shown
+            run {
+                if (card == null) {
                     Box(Modifier)
                 } else {
+                    val item = card.item
+                    // Every line has a fixed slot. A line with nothing to say keeps
+                    // its height (empty text / INVISIBLE), so the block never
+                    // changes size while the stills rotate — same reason CinePath
+                    // positions its caption on absolute coordinates.
+                    //
+                    // Fixed sizes, not theme steps: tv-material's label scale
+                    // tops out at 14 sp, which vanishes on a TV.
+                    val meta = card.meta
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        // Fixed sizes, not theme steps: tv-material's label scale
-                        // tops out at 14 sp, which vanishes on a TV. The source
-                        // line and the description line (14 → 22 sp) and the
-                        // title (24 → 32 sp) each jump two steps up that ladder;
-                        // the D-pad hint stays at 12 sp.
                         val source = Shelf.sourceLabel(pkg)
-                        if (source != 0) {
-                            Text(
-                                text = stringResource(source),
-                                style = MaterialTheme.typography.labelLarge.copy(
-                                    fontSize = 22.sp,
-                                    lineHeight = 28.sp,
-                                    shadow = ShelfShadow,
-                                ),
-                                color = Color.White.copy(alpha = 0.85f),
-                            )
-                        }
+                        Text(
+                            text = if (source != 0) stringResource(source) else "",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontSize = 22.sp,
+                                lineHeight = 28.sp,
+                                shadow = ShelfShadow,
+                            ),
+                            color = Color.White.copy(alpha = 0.85f),
+                        )
                         Text(
                             text = item.title,
                             style = MaterialTheme.typography.headlineSmall.copy(
@@ -464,16 +571,36 @@ private fun ShelfContent(
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
-                        Text(
-                            text = item.meta,
+                        ShelfDetailLine(
+                            text = detailLine(item, meta),
                             style = MaterialTheme.typography.bodyMedium.copy(
-                                fontSize = 22.sp,
+                                fontSize = 20.sp,
                                 lineHeight = 28.sp,
                                 shadow = ShelfShadow,
                             ),
                             color = Color.White.copy(alpha = 0.85f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                        )
+                        ShelfDetailLine(
+                            text = castLine(meta?.cast.orEmpty()),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 20.sp,
+                                lineHeight = 28.sp,
+                                shadow = ShelfShadow,
+                            ),
+                            color = Color.White.copy(alpha = 0.7f),
+                        )
+                        // Two lines are always reserved: the synopsis is the line
+                        // most likely to arrive late (Douban answers after the
+                        // picture), and letting it grow in would shift the dots.
+                        ShelfDetailLine(
+                            text = meta?.intro.orEmpty(),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 19.sp,
+                                lineHeight = 26.sp,
+                                shadow = ShelfShadow,
+                            ),
+                            color = Color.White.copy(alpha = 0.72f),
+                            lines = 2,
                         )
                     }
                 }
@@ -513,9 +640,156 @@ private fun ShelfContent(
     }
 }
 
-/** Soft drop shadow so white text stays readable over a bright still. */
+/**
+ * Ask Douban about one card and publish the answer, unless it is too late.
+ *
+ * Called on every displayed card (rotation and D-pad alike) and deduplicated by
+ * [ShelfUi.metaKey]; a card already answered costs nothing. The answer is dropped
+ * when the user has moved on — the next card's effect resets [ShelfUi.metaKey], so
+ * a late answer for the previous card can never overwrite the current caption.
+ */
+/**
+ * One card as drawn: the still and the caption that belongs to it.
+ *
+ * They travel together so the shelf can never show a picture and a caption from
+ * different moments — the failure that made the text "flash" on every switch.
+ */
+internal data class Card(
+    val item: Shelf.Item,
+    val bitmap: Bitmap,
+    /** Null = Douban had nothing usable; the caption stays platform-only. */
+    val meta: DoubanMeta.Meta?,
+)
+
+/**
+ * At most one lookup per card, with every caller sharing the answer.
+ *
+ * Needed because card N+1 is prefetched while card N is on screen: when the user
+ * reaches N+1, its display and its prefetch are the same question. Handing the
+ * second caller `null` (as an earlier "is it in flight?" check did) dropped the
+ * answer and left that card on its platform caption.
+ */
+internal class LookupGate {
+    private val running = HashMap<String, CompletableDeferred<DoubanMeta.Meta?>>()
+
+    /** Returns the deferred to await; [mine] marks the caller that must fill it. */
+    fun join(key: String): Pair<CompletableDeferred<DoubanMeta.Meta?>, Boolean> = synchronized(running) {
+        running[key]?.let { return it to false }
+        val fresh = CompletableDeferred<DoubanMeta.Meta?>()
+        running[key] = fresh
+        fresh to true
+    }
+
+    fun leave(key: String) = synchronized(running) { running.remove(key) }
+
+    internal fun size() = synchronized(running) { running.size }
+}
+
+private suspend fun lookupInto(
+    platform: String,
+    item: Shelf.Item,
+    key: String,
+    ctx: android.content.Context,
+): DoubanMeta.Meta? {
+    val (result, mine) = gate.join(key)
+    if (!mine) return result.await()
+    try {
+        var found: DoubanMeta.Meta? = null
+        // Each id gets its OWN budget. Wrapping both in one timeout meant the
+        // second attempt inherited whatever the first had already spent, and a
+        // cancel there surfaced as a bogus "no match".
+        for (id in item.programIds) {
+            val meta = withTimeoutOrNull(DOUBAN_BUDGET_MS) {
+                DoubanMeta.lookup(ctx, platform, id, item.title)
+            }
+            if (meta != null) {
+                found = meta
+                break
+            }
+        }
+        result.complete(found)
+        return found
+    } catch (t: Throwable) {
+        result.complete(null)
+        throw t
+    } finally {
+        gate.leave(key)
+    }
+}
+
+/** Shared by the visible card and the prefetch of the next one. */
+private val gate = LookupGate()
+
+/**
+ * One card as drawn: the still and the caption that belongs to it.
+ *
+ * They travel together so the shelf can never show a picture and a caption from
+ * different moments — the failure that made the text "flash" on every switch.
+ */
+/** Soft drop shadow so white text stays readable over a bright still. *//** Soft drop shadow so white text stays readable over a bright still. */
 private val ShelfShadow = Shadow(
     color = Color.Black.copy(alpha = 0.7f),
     offset = androidx.compose.ui.geometry.Offset(0f, 2f),
     blurRadius = 12f,
 )
+
+/**
+ * Identity of a card, used to pair a late Douban answer with the card that asked
+ * for it: the title plus the still, both of which the sources always fill in.
+ */
+internal fun itemKey(item: Shelf.Item): String =
+    DoubanMeta.norm(item.title) + "|" + item.image
+
+/**
+ * The genre line — Douban's when the lookup answered, the service's own
+ * otherwise. Douban brings the films/series' real genres, region, year and
+ * score; the service's tag is a fallback, not an equal.
+ */
+internal fun detailLine(item: Shelf.Item, meta: DoubanMeta.Meta?): String {
+    if (meta != null) {
+        val parts = ArrayList<String>()
+        if (meta.genres.isNotEmpty()) parts.add(meta.genres.joinToString(" · "))
+        if (meta.region.isNotEmpty()) parts.add(meta.region)
+        if (meta.year.isNotEmpty()) parts.add(meta.year)
+        // Only Douban's score is shown (never the platform's): it is the one the
+        // label "豆瓣" can honestly name.
+        if (meta.rating > 0) parts.add(String.format(Locale.US, "豆瓣 %.1f", meta.rating))
+        if (parts.isNotEmpty()) return parts.joinToString(" · ")
+    }
+    return item.meta
+}
+
+/**
+ * "演员：甲 · 乙 · 丙 · 丁 等" — the first four names, then 等. Empty when the
+ * lookup brought no cast, which keeps the line blank (see [ShelfDetailLine]).
+ */
+internal fun castLine(names: List<String>): String {
+    val clean = names.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+    if (clean.isEmpty()) return ""
+    return "演员：" + clean.take(4).joinToString(" · ") + if (clean.size > 4) " 等" else ""
+}
+
+/**
+ * One fixed caption line. When [text] is empty the line keeps its height
+ * (invisible, not removed), so a missing field never shifts the lines below it —
+ * and the block does not change size when two cards with different amounts of
+ * metadata cross-fade.
+ */
+@Composable
+private fun ShelfDetailLine(
+    text: String,
+    style: androidx.compose.ui.text.TextStyle,
+    color: Color,
+    lines: Int = 1,
+) {
+    Text(
+        text = text,
+        style = style,
+        color = color,
+        maxLines = lines,
+        overflow = TextOverflow.Ellipsis,
+        // alpha, not zero-size: the slot keeps exactly the height this text
+        // WOULD have taken, at every font scale the launcher offers.
+        modifier = if (text.isEmpty()) Modifier.alpha(0f) else Modifier,
+    )
+}

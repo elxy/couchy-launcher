@@ -199,4 +199,6 @@
     <string name="shelf_tencent">텐센트 비디오 · 인기</string>
     <string name="shelf_youku">유쿠 · 인기</string>
     <string name="shelf_hint">↑ 컨트롤 · ↓ 앱으로 돌아가기 · OK 재생</string>
+    <string name="shelf_douban_label">더우반 상세 정보</string>
+    <string name="shelf_douban_sub">화면에 표시된 작품에 장르·줄거리·출연진·더우반 평점을 추가합니다. 작품 제목을 더우반(movie.douban.com, m.douban.com)으로 전송합니다.</string>
 </resources>
